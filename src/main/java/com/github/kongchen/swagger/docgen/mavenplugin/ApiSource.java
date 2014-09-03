@@ -18,202 +18,202 @@ import java.util.*;
  */
 public class ApiSource {
 
-    /**
-     * Java classes containing Swagger's annotation <code>@Api</code>, or Java packages containing those classes 
-     * can be configured here, use ; as the delimiter if you have more than one location.
-     */
-    @Parameter(required = true)
-    private String locations;
-    
-    @Parameter(name = "apiInfo", required = false)
-    private ApiSourceInfo apiInfo;
+	/**
+	 * Java classes containing Swagger's annotation <code>@Api</code>, or Java packages containing those classes
+	 * can be configured here, use ; as the delimiter if you have more than one location.
+	 */
+	@Parameter(required = true)
+	private String locations;
 
-    /**
-     * The version of your APIs 
-     */
-    @Parameter(required = true)
-    private String apiVersion;
+	@Parameter(name = "apiInfo", required = false)
+	private ApiSourceInfo apiInfo;
 
-    /**
-     * The basePath of your APIs. 
-     */
-    @Parameter(required = true)
-    private String basePath;
+	/**
+	 * The version of your APIs
+	 */
+	@Parameter(required = true)
+	private String apiVersion;
 
-    /**
-     * <code>outputTemplate</code> is the path of a mustache template file, 
-     * see more details in next section. 
-     * If you don't want to generate extra api documents, just don't set it.
-     */
-    @Parameter(required = false)
-    private String outputTemplate;
+	/**
+	 * The basePath of your APIs.
+	 */
+	@Parameter(required = true)
+	private String basePath;
 
-    @Parameter
-    private String outputPath;
+	/**
+	 * <code>outputTemplate</code> is the path of a mustache template file,
+	 * see more details in next section.
+	 * If you don't want to generate extra api documents, just don't set it.
+	 */
+	@Parameter(required = false)
+	private String outputTemplate;
 
-    @Parameter
-    private String swaggerDirectory;
+	@Parameter
+	private String outputPath;
 
-    @Parameter
-    public String mustacheFileRoot;
+	@Parameter
+	private String swaggerDirectory;
 
-    @Parameter
-    public boolean useOutputFlatStructure = true;
+	@Parameter
+	public String mustacheFileRoot;
 
-    @Parameter
-    private String swaggerUIDocBasePath;
+	@Parameter
+	public boolean useOutputFlatStructure = true;
 
-    @Parameter
-    private String overridingModels;
+	@Parameter
+	private String swaggerUIDocBasePath;
 
-    /**
-     * Information about swagger filter that will be used for prefiltering
-     */
-    @Parameter
-    private String swaggerInternalFilter;
+	@Parameter
+	private String overridingModels;
 
-    public Map<String, List<Resource>> getValidClasses() throws GenerateException {
+	/**
+	 * Information about swagger filter that will be used for prefiltering
+	 */
+	@Parameter
+	private String swaggerInternalFilter;
 
-        Map<String, List<Resource>> resources = new HashMap<>();
+	public Map<String, List<Resource>> getValidClasses() throws GenerateException {
 
-	    try {
-	        ApplicationRoutes applicationRoutes = (ApplicationRoutes) Class.forName(locations).newInstance();
-	        RouterImpl router = new RouterImpl(null, null);
-	        applicationRoutes.init(router);
+		Map<String, List<Resource>> resources = new HashMap<>();
 
-	        Field allRouteBuildersField = router.getClass().getDeclaredField("allRouteBuilders");
-	        allRouteBuildersField.setAccessible(true);
-	        List<RouteBuilder> routeBuilders = (List<RouteBuilder>) allRouteBuildersField.get(router);
+		try {
+			ApplicationRoutes applicationRoutes = (ApplicationRoutes) Class.forName(locations).newInstance();
+			RouterImpl router = new RouterImpl(null, null);
+			applicationRoutes.init(router);
 
-	        for (RouteBuilder routeBuilder : routeBuilders) {
+			Field allRouteBuildersField = router.getClass().getDeclaredField("allRouteBuilders");
+			allRouteBuildersField.setAccessible(true);
+			List<RouteBuilder> routeBuilders = (List<RouteBuilder>) allRouteBuildersField.get(router);
 
-		        Field controllerField = routeBuilder.getClass().getDeclaredField("controller");
-		        controllerField.setAccessible(true);
-		        Class controllerClass = (Class) controllerField.get(routeBuilder);
-		        if (controllerClass != null) {
-			        if (controllerClass.isAnnotationPresent(Api.class)) {
+			for (RouteBuilder routeBuilder : routeBuilders) {
 
-				        Field httpMethodField = routeBuilder.getClass().getDeclaredField("httpMethod");
-				        httpMethodField.setAccessible(true);
-				        String httpMethod = (String) httpMethodField.get(routeBuilder);
-				        Field uriField = routeBuilder.getClass().getDeclaredField("uri");
-				        uriField.setAccessible(true);
-				        String uri = (String) uriField.get(routeBuilder);
-				        Field methodField = routeBuilder.getClass().getDeclaredField("controllerMethod");
-				        methodField.setAccessible(true);
-				        Method method = (Method) methodField.get(routeBuilder);
+				Field controllerField = routeBuilder.getClass().getDeclaredField("controller");
+				controllerField.setAccessible(true);
+				Class controllerClass = (Class) controllerField.get(routeBuilder);
+				if (controllerClass != null) {
+					if (controllerClass.isAnnotationPresent(Api.class)) {
 
-					    Resource resource = new Resource(controllerClass, method, httpMethod);
+						Field httpMethodField = routeBuilder.getClass().getDeclaredField("httpMethod");
+						httpMethodField.setAccessible(true);
+						String httpMethod = (String) httpMethodField.get(routeBuilder);
+						Field uriField = routeBuilder.getClass().getDeclaredField("uri");
+						uriField.setAccessible(true);
+						String uri = (String) uriField.get(routeBuilder);
+						Field methodField = routeBuilder.getClass().getDeclaredField("controllerMethod");
+						methodField.setAccessible(true);
+						Method method = (Method) methodField.get(routeBuilder);
 
-				        if(resources.containsKey(uri)) {
-					        resources.get(uri).add(resource);
-				        } else {
-					        List<Resource> routies = new ArrayList<>();
-					        routies.add(resource);
-					        resources.put(uri, routies);
-				        }
-			        }
-		        }
-	        }
-	    } catch (Exception e) {
-		    throw new RuntimeException(e);
-	    }
-        return resources;
-    }
+						Resource resource = new Resource(controllerClass, method, httpMethod);
 
-    public ApiSourceInfo getApiInfo() {
-        return apiInfo;
-    }
+						if (resources.containsKey(uri)) {
+							resources.get(uri).add(resource);
+						} else {
+							List<Resource> routies = new ArrayList<>();
+							routies.add(resource);
+							resources.put(uri, routies);
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return resources;
+	}
 
-    public void setApiInfo(ApiSourceInfo apiInfo) {
-        this.apiInfo = apiInfo;
-    }
+	public ApiSourceInfo getApiInfo() {
+		return apiInfo;
+	}
 
-    public String getLocations() {
-        return locations;
-    }
+	public void setApiInfo(ApiSourceInfo apiInfo) {
+		this.apiInfo = apiInfo;
+	}
 
-    public void setLocations(String locations) {
-        this.locations = locations;
-    }
+	public String getLocations() {
+		return locations;
+	}
 
-    public String getOutputTemplate() {
-        return outputTemplate;
-    }
+	public void setLocations(String locations) {
+		this.locations = locations;
+	}
 
-    public void setOutputTemplate(String outputTemplate) {
-        this.outputTemplate = outputTemplate;
-    }
+	public String getOutputTemplate() {
+		return outputTemplate;
+	}
 
-    public String getMustacheFileRoot() {
-        return mustacheFileRoot;
-    }
+	public void setOutputTemplate(String outputTemplate) {
+		this.outputTemplate = outputTemplate;
+	}
 
-    public void setMustacheFileRoot(String mustacheFileRoot) {
-        this.mustacheFileRoot = mustacheFileRoot;
-    }
+	public String getMustacheFileRoot() {
+		return mustacheFileRoot;
+	}
 
-    public boolean isUseOutputFlatStructure() {
-        return useOutputFlatStructure;
-    }
+	public void setMustacheFileRoot(String mustacheFileRoot) {
+		this.mustacheFileRoot = mustacheFileRoot;
+	}
 
-    public void setUseOutputFlatStructure(boolean useOutputFlatStructure) {
-        this.useOutputFlatStructure = useOutputFlatStructure;
-    }
+	public boolean isUseOutputFlatStructure() {
+		return useOutputFlatStructure;
+	}
 
-    public String getOutputPath() {
-        return outputPath;
-    }
+	public void setUseOutputFlatStructure(boolean useOutputFlatStructure) {
+		this.useOutputFlatStructure = useOutputFlatStructure;
+	}
 
-    public void setOutputPath(String outputPath) {
-        this.outputPath = outputPath;
-    }
+	public String getOutputPath() {
+		return outputPath;
+	}
 
-    public String getApiVersion() {
-        return apiVersion;
-    }
+	public void setOutputPath(String outputPath) {
+		this.outputPath = outputPath;
+	}
 
-    public void setApiVersion(String apiVersion) {
-        this.apiVersion = apiVersion;
-    }
+	public String getApiVersion() {
+		return apiVersion;
+	}
 
-    public String getBasePath() {
-        return basePath;
-    }
+	public void setApiVersion(String apiVersion) {
+		this.apiVersion = apiVersion;
+	}
 
-    public void setBasePath(String basePath) {
-        this.basePath = basePath;
-    }
+	public String getBasePath() {
+		return basePath;
+	}
 
-    public String getSwaggerDirectory() {
-        return swaggerDirectory;
-    }
+	public void setBasePath(String basePath) {
+		this.basePath = basePath;
+	}
 
-    public void setSwaggerDirectory(String swaggerDirectory) {
-        this.swaggerDirectory = swaggerDirectory;
-    }
+	public String getSwaggerDirectory() {
+		return swaggerDirectory;
+	}
 
-    public void setSwaggerUIDocBasePath(String swaggerUIDocBasePath) {
-        this.swaggerUIDocBasePath = swaggerUIDocBasePath;
-    }
+	public void setSwaggerDirectory(String swaggerDirectory) {
+		this.swaggerDirectory = swaggerDirectory;
+	}
 
-    public String getSwaggerUIDocBasePath() {
-        return swaggerUIDocBasePath;
-    }
+	public void setSwaggerUIDocBasePath(String swaggerUIDocBasePath) {
+		this.swaggerUIDocBasePath = swaggerUIDocBasePath;
+	}
 
-    public String getOverridingModels() {
-        return overridingModels;
-    }
+	public String getSwaggerUIDocBasePath() {
+		return swaggerUIDocBasePath;
+	}
 
-    public void setOverridingModels(String overridingModels) {
-        this.overridingModels = overridingModels;
-    }
+	public String getOverridingModels() {
+		return overridingModels;
+	}
 
-    public String getSwaggerInternalFilter() {
-        return swaggerInternalFilter;
-    }
+	public void setOverridingModels(String overridingModels) {
+		this.overridingModels = overridingModels;
+	}
 
-    public void setSwaggerInternalFilter(String swaggerInternalFilter) {
-        this.swaggerInternalFilter = swaggerInternalFilter;
-    }
+	public String getSwaggerInternalFilter() {
+		return swaggerInternalFilter;
+	}
+
+	public void setSwaggerInternalFilter(String swaggerInternalFilter) {
+		this.swaggerInternalFilter = swaggerInternalFilter;
+	}
 }

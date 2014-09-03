@@ -18,37 +18,36 @@ import java.util.List;
  * User: kongchen
  * Date: 3/7/13
  */
-@Mojo( name = "generate", defaultPhase = LifecyclePhase.COMPILE, configurator = "include-project-dependencies",
-       requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
+@Mojo(name = "generate", defaultPhase = LifecyclePhase.COMPILE, configurator = "include-project-dependencies",
+		requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class ApiDocumentMojo extends AbstractMojo {
 
-    /**
-     * A set of apiSources.
-     * One apiSource can be considered as a set of APIs for one apiVersion in a basePath
-     * 
-     */
-    @Parameter
-    private List<ApiSource> apiSources;
+	/**
+	 * A set of apiSources.
+	 * One apiSource can be considered as a set of APIs for one apiVersion in a basePath
+	 */
+	@Parameter
+	private List<ApiSource> apiSources;
 
-    public List<ApiSource> getApiSources() {
-        return apiSources;
-    }
+	public List<ApiSource> getApiSources() {
+		return apiSources;
+	}
 
-    public void setApiSources(List<ApiSource> apiSources) {
-        this.apiSources = apiSources;
-    }
+	public void setApiSources(List<ApiSource> apiSources) {
+		this.apiSources = apiSources;
+	}
 
-    @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
-        if (apiSources == null) {
-            throw new MojoFailureException("You must configure at least one apiSources element");
-        }
-        if (useSwaggerSpec11()) {
-            throw new MojoExecutionException("You may use an old version of swagger which is not supported by swagger-maven-plugin 2.0+\n" +
-                "swagger-maven-plugin 2.0+ only supports swagger-core 1.3.x");
-        }
+	@Override
+	public void execute() throws MojoExecutionException, MojoFailureException {
+		if (apiSources == null) {
+			throw new MojoFailureException("You must configure at least one apiSources element");
+		}
+		if (useSwaggerSpec11()) {
+			throw new MojoExecutionException("You may use an old version of swagger which is not supported by swagger-maven-plugin 2.0+\n" +
+					"swagger-maven-plugin 2.0+ only supports swagger-core 1.3.x");
+		}
 
-        try {
+		try {
 //	        for (ApiSource apiSource : apiSources) {
 //		        ApplicationRoutes applicationRoutes = (ApplicationRoutes) Class.forName(apiSource.getLocations()).newInstance();
 //		        RouterImpl router = new RouterImpl(null, null);
@@ -104,12 +103,12 @@ public class ApiDocumentMojo extends AbstractMojo {
 //		        System.out.println("====> Result: " + resultField.get(routeBuilder));
 
 
-            for (ApiSource apiSource : apiSources) {
+			for (ApiSource apiSource : apiSources) {
 
-                AbstractDocumentSource documentSource = new MavenDocumentSource(apiSource, getLog());
-                documentSource.loadOverridingModels();
-                documentSource.loadDocuments();
-				if (apiSource.getOutputPath() != null){
+				AbstractDocumentSource documentSource = new MavenDocumentSource(apiSource, getLog());
+				documentSource.loadOverridingModels();
+				documentSource.loadDocuments();
+				if (apiSource.getOutputPath() != null) {
 					File outputDirectory = new File(apiSource.getOutputPath()).getParentFile();
 					if (outputDirectory != null && !outputDirectory.exists()) {
 						if (!outputDirectory.mkdirs()) {
@@ -118,25 +117,25 @@ public class ApiDocumentMojo extends AbstractMojo {
 						}
 					}
 				}
-                documentSource.toSwaggerDocuments(
-                        apiSource.getSwaggerUIDocBasePath() == null
-                                ? apiSource.getBasePath()
-                                : apiSource.getSwaggerUIDocBasePath());
-            }
+				documentSource.toSwaggerDocuments(
+						apiSource.getSwaggerUIDocBasePath() == null
+								? apiSource.getBasePath()
+								: apiSource.getSwaggerUIDocBasePath());
+			}
 
-        } catch (Exception e) {
-            throw new MojoFailureException(e.getMessage(), e);
-        } catch (GenerateException e) {
-	        throw new RuntimeException(e);
-        }
-    }
+		} catch (Exception e) {
+			throw new MojoFailureException(e.getMessage(), e);
+		} catch (GenerateException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    private boolean useSwaggerSpec11() {
-        try {
-            Class<?> tryClass = Class.forName("com.wordnik.swagger.annotations.ApiErrors");
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
-    }
+	private boolean useSwaggerSpec11() {
+		try {
+			Class<?> tryClass = Class.forName("com.wordnik.swagger.annotations.ApiErrors");
+			return true;
+		} catch (ClassNotFoundException e) {
+			return false;
+		}
+	}
 }

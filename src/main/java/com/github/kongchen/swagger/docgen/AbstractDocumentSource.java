@@ -47,8 +47,8 @@ public abstract class AbstractDocumentSource {
 	private String basePath;
 
 	private String apiVersion;
-    
-    private ApiSourceInfo apiInfo;
+
+	private ApiSourceInfo apiInfo;
 
 	private ObjectMapper mapper = new ObjectMapper();
 
@@ -57,8 +57,8 @@ public abstract class AbstractDocumentSource {
 	private String overridingModels;
 
 	public AbstractDocumentSource(LogAdapter logAdapter, String outputPath,
-			String outputTpl, String swaggerOutput, String mustacheFileRoot,
-			boolean useOutputFlatStructure1, String overridingModels) {
+	                              String outputTpl, String swaggerOutput, String mustacheFileRoot,
+	                              boolean useOutputFlatStructure1, String overridingModels) {
 		LOG = logAdapter;
 		this.outputPath = outputPath;
 		this.templatePath = outputTpl;
@@ -86,15 +86,15 @@ public abstract class AbstractDocumentSource {
 		this.apiVersion = apiVersion;
 	}
 
-    public ApiSourceInfo getApiInfo() {
-        return apiInfo;
-    }
+	public ApiSourceInfo getApiInfo() {
+		return apiInfo;
+	}
 
-    public void setApiInfo(ApiSourceInfo apiInfo) {
-        this.apiInfo = apiInfo;
-    }
+	public void setApiInfo(ApiSourceInfo apiInfo) {
+		this.apiInfo = apiInfo;
+	}
 
-    protected void acceptDocument(ApiListing doc) {
+	protected void acceptDocument(ApiListing doc) {
 		String basePath;
 		// will append api's basePath. However, apiReader does not read it
 		// correctly by now
@@ -187,7 +187,7 @@ public abstract class AbstractDocumentSource {
 	private void prepareServiceDocument() {
 		List<ApiListingReference> apiListingReferences = new ArrayList<ApiListingReference>();
 		for (Iterator<ApiListingReference> iterator = serviceDocument.apis()
-				.iterator(); iterator.hasNext();) {
+				.iterator(); iterator.hasNext(); ) {
 			ApiListingReference apiListingReference = iterator.next();
 			String newPath = apiListingReference.path();
 			if (useOutputFlatStructure) {
@@ -199,7 +199,7 @@ public abstract class AbstractDocumentSource {
 			newPath += ".{format}";
 			apiListingReferences.add(new ApiListingReference(newPath,
 					apiListingReference.description(), apiListingReference
-							.position()));
+					.position()));
 		}
 		// there's no setter of path for ApiListingReference, we need to create
 		// a new ResourceListing for new path
@@ -230,7 +230,7 @@ public abstract class AbstractDocumentSource {
 	}
 
 	private void writeInDirectory(File dir, ApiListing apiListing,
-			String basePath) throws GenerateException {
+	                              String basePath) throws GenerateException {
 		String filename = resourcePathToFilename(apiListing.resourcePath());
 		try {
 			File serviceFile = createFile(dir, filename);
@@ -247,7 +247,7 @@ public abstract class AbstractDocumentSource {
 	}
 
 	private void writeInDirectory(File dir, ResourceListing resourceListing,
-			String basePath) throws GenerateException {
+	                              String basePath) throws GenerateException {
 		String filename = resourcePathToFilename(null);
 		try {
 			File serviceFile = createFile(dir, filename);
@@ -283,7 +283,6 @@ public abstract class AbstractDocumentSource {
 		LOG.info("Creating file " + serviceFile.getAbsolutePath());
 		return serviceFile;
 	}
-
 
 
 	private URI getTemplateUri() throws GenerateException {

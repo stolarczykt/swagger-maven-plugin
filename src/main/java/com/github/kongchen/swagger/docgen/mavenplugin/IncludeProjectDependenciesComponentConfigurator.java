@@ -21,62 +21,61 @@ import java.util.List;
  * to the
  *
  * @author Brian Jackson
- * @since Aug 1, 2008 3:04:17 PM
- *
  * @plexus.component role="org.codehaus.plexus.component.configurator.ComponentConfigurator"
- *                   role-hint="include-project-dependencies"
+ * role-hint="include-project-dependencies"
  * @plexus.requirement role="org.codehaus.plexus.component.configurator.converters.lookup.ConverterLookup"
- *                   role-hint="default"
+ * role-hint="default"
+ * @since Aug 1, 2008 3:04:17 PM
  */
 public class IncludeProjectDependenciesComponentConfigurator extends AbstractComponentConfigurator {
 
 
-    public void configureComponent( Object component, PlexusConfiguration configuration,
-                                    ExpressionEvaluator expressionEvaluator, ClassRealm containerRealm,
-                                    ConfigurationListener listener )
-            throws ComponentConfigurationException {
+	public void configureComponent(Object component, PlexusConfiguration configuration,
+	                               ExpressionEvaluator expressionEvaluator, ClassRealm containerRealm,
+	                               ConfigurationListener listener)
+			throws ComponentConfigurationException {
 
-        addProjectDependenciesToClassRealm(expressionEvaluator, containerRealm);
+		addProjectDependenciesToClassRealm(expressionEvaluator, containerRealm);
 
-        ObjectWithFieldsConverter converter = new ObjectWithFieldsConverter();
+		ObjectWithFieldsConverter converter = new ObjectWithFieldsConverter();
 
-        converter.processConfiguration( converterLookup, component, containerRealm.getClassLoader(), configuration,
-                expressionEvaluator, listener );
+		converter.processConfiguration(converterLookup, component, containerRealm.getClassLoader(), configuration,
+				expressionEvaluator, listener);
 
-    }
+	}
 
-    private void addProjectDependenciesToClassRealm(ExpressionEvaluator expressionEvaluator, ClassRealm containerRealm) throws ComponentConfigurationException {
-        List<String> compileClasspathElements;
-        try {
-            //noinspection unchecked
-            compileClasspathElements = (List<String>) expressionEvaluator.evaluate("${project.compileClasspathElements}");
-        } catch (ExpressionEvaluationException e) {
-            throw new ComponentConfigurationException("There was a problem evaluating: ${project.compileClasspathElements}", e);
-        }
+	private void addProjectDependenciesToClassRealm(ExpressionEvaluator expressionEvaluator, ClassRealm containerRealm) throws ComponentConfigurationException {
+		List<String> compileClasspathElements;
+		try {
+			//noinspection unchecked
+			compileClasspathElements = (List<String>) expressionEvaluator.evaluate("${project.compileClasspathElements}");
+		} catch (ExpressionEvaluationException e) {
+			throw new ComponentConfigurationException("There was a problem evaluating: ${project.compileClasspathElements}", e);
+		}
 
-        // Add the project dependencies to the ClassRealm
-        final URL[] urls = buildURLs(compileClasspathElements);
-        for (URL url : urls) {
-            containerRealm.addConstituent(url);
-        }
-    }
+		// Add the project dependencies to the ClassRealm
+		final URL[] urls = buildURLs(compileClasspathElements);
+		for (URL url : urls) {
+			containerRealm.addConstituent(url);
+		}
+	}
 
-    private URL[] buildURLs(List<String> runtimeClasspathElements) throws ComponentConfigurationException {
-        // Add the projects classes and dependencies
-        List<URL> urls = new ArrayList<URL>(runtimeClasspathElements.size());
-        for (String element : runtimeClasspathElements) {
+	private URL[] buildURLs(List<String> runtimeClasspathElements) throws ComponentConfigurationException {
+		// Add the projects classes and dependencies
+		List<URL> urls = new ArrayList<URL>(runtimeClasspathElements.size());
+		for (String element : runtimeClasspathElements) {
 
-            try {
-                final URL url = new File(element).toURI().toURL();
-                urls.add(url);
+			try {
+				final URL url = new File(element).toURI().toURL();
+				urls.add(url);
 
-            } catch (MalformedURLException e) {
-                throw new ComponentConfigurationException("Unable to access project dependency: " + element, e);
-            }
-        }
+			} catch (MalformedURLException e) {
+				throw new ComponentConfigurationException("Unable to access project dependency: " + element, e);
+			}
+		}
 
-        // Add the plugin's dependencies (so Trove stuff works if Trove isn't on
-        return urls.toArray(new URL[urls.size()]);
-    }
+		// Add the plugin's dependencies (so Trove stuff works if Trove isn't on
+		return urls.toArray(new URL[urls.size()]);
+	}
 
 }

@@ -14,11 +14,11 @@ public class GenerateException extends Throwable {
 		super(errorMessage, cause);
 	}
 
-    public GenerateException(String errorMessage) {
-        super(errorMessage);
-    }
+	public GenerateException(String errorMessage) {
+		super(errorMessage);
+	}
 
-    public GenerateException(Exception e) {
-        super(e);
-    }
+	public GenerateException(Exception e) {
+		super(e);
+	}
 }
