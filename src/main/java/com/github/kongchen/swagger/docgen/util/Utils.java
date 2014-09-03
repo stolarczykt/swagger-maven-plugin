@@ -5,8 +5,6 @@ import com.wordnik.swagger.model.AllowableRangeValues;
 import com.wordnik.swagger.model.AllowableValues;
 import com.wordnik.swagger.model.AnyAllowableValues$;
 import scala.Option;
-import scala.collection.JavaConversions;
-import scala.collection.mutable.Buffer;
 
 /**
  * Created with IntelliJ IDEA.
@@ -25,10 +23,10 @@ public class Utils {
         }
         String values = "";
         if (allowableValues instanceof AllowableListValues) {
-            Buffer<String> buffer = ((AllowableListValues) allowableValues).values().toBuffer();
-            for (String aVlist : JavaConversions.asJavaList(buffer)) {
-                values += aVlist.trim() + ", ";
-            }
+//            Buffer<String> buffer = (Buffer<String>) ((AllowableListValues) allowableValues).values().toBuffer();
+//            for (String aVlist : JavaConversions.asJavaList(buffer)) {
+//                values += aVlist.trim() + ", ";
+//            }
             values = values.trim();
             values = values.substring(0, values.length() - 1);
         } else if (allowableValues instanceof AllowableRangeValues) {

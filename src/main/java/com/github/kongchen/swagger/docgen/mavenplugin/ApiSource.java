@@ -1,13 +1,15 @@
 package com.github.kongchen.swagger.docgen.mavenplugin;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
 import com.github.kongchen.swagger.docgen.GenerateException;
 import com.wordnik.swagger.annotations.Api;
+import ninja.RouteBuilder;
+import ninja.RouterImpl;
+import ninja.application.ApplicationRoutes;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.reflections.Reflections;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -70,29 +72,53 @@ public class ApiSource {
     @Parameter
     private String swaggerInternalFilter;
 
-    public Set<Class> getValidClasses() throws GenerateException {
-        Set<Class> classes = new HashSet<Class>();
-        if (getLocations() == null) {
-            Set<Class<?>> c = new Reflections("").getTypesAnnotatedWith(Api.class);
-            classes.addAll(c);
-        } else {
-            if (locations.contains(";")) {
-                String[] sources = locations.split(";");
-                for (String source : sources) {
-                    Set<Class<?>> c = new Reflections(source).getTypesAnnotatedWith(Api.class);
-                    classes.addAll(c);
-                }
-            } else {
-                classes.addAll(new Reflections(locations).getTypesAnnotatedWith(Api.class));
-            }
-        }
-        Iterator<Class> it = classes.iterator();
-        while (it.hasNext()) {
-            if (it.next().getName().startsWith("com.wordnik.swagger")) {
-                it.remove();
-            }
-        }
-        return classes;
+    public Map<String, List<Resource>> getValidClasses() throws GenerateException {
+
+        Map<String, List<Resource>> resources = new HashMap<>();
+
+	    try {
+	        ApplicationRoutes applicationRoutes = (ApplicationRoutes) Class.forName(locations).newInstance();
+	        RouterImpl router = new RouterImpl(null, null);
+	        applicationRoutes.init(router);
+
+	        Field allRouteBuildersField = router.getClass().getDeclaredField("allRouteBuilders");
+	        allRouteBuildersField.setAccessible(true);
+	        List<RouteBuilder> routeBuilders = (List<RouteBuilder>) allRouteBuildersField.get(router);
+
+	        for (RouteBuilder routeBuilder : routeBuilders) {
+
+		        Field controllerField = routeBuilder.getClass().getDeclaredField("controller");
+		        controllerField.setAccessible(true);
+		        Class controllerClass = (Class) controllerField.get(routeBuilder);
+		        if (controllerClass != null) {
+			        if (controllerClass.isAnnotationPresent(Api.class)) {
+
+				        Field httpMethodField = routeBuilder.getClass().getDeclaredField("httpMethod");
+				        httpMethodField.setAccessible(true);
+				        String httpMethod = (String) httpMethodField.get(routeBuilder);
+				        Field uriField = routeBuilder.getClass().getDeclaredField("uri");
+				        uriField.setAccessible(true);
+				        String uri = (String) uriField.get(routeBuilder);
+				        Field methodField = routeBuilder.getClass().getDeclaredField("controllerMethod");
+				        methodField.setAccessible(true);
+				        Method method = (Method) methodField.get(routeBuilder);
+
+					    Resource resource = new Resource(controllerClass, method, httpMethod);
+
+				        if(resources.containsKey(uri)) {
+					        resources.get(uri).add(resource);
+				        } else {
+					        List<Resource> routies = new ArrayList<>();
+					        routies.add(resource);
+					        resources.put(uri, routies);
+				        }
+			        }
+		        }
+	        }
+	    } catch (Exception e) {
+		    throw new RuntimeException(e);
+	    }
+        return resources;
     }
 
     public ApiSourceInfo getApiInfo() {

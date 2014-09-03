@@ -3,24 +3,16 @@ package com.github.kongchen.swagger.docgen.mavenplugin;
 import com.github.kongchen.swagger.docgen.AbstractDocumentSource;
 import com.github.kongchen.swagger.docgen.GenerateException;
 import com.github.kongchen.swagger.docgen.LogAdapter;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.config.FilterFactory;
-import com.wordnik.swagger.config.FilterFactory$;
 import com.wordnik.swagger.config.SwaggerConfig;
 import com.wordnik.swagger.core.SwaggerSpec;
 import com.wordnik.swagger.core.filter.SpecFilter;
-import com.wordnik.swagger.core.filter.SwaggerSpecFilter;
-import com.wordnik.swagger.jaxrs.JaxrsApiReader;
-import com.wordnik.swagger.jaxrs.reader.DefaultJaxrsApiReader;
 import com.wordnik.swagger.model.*;
-
+import ninja.params.PathParam;
 import org.apache.maven.plugin.logging.Log;
-
 import scala.None;
 import scala.Option;
 import scala.collection.JavaConversions;
-import scala.collection.immutable.Map$;
-import scala.collection.mutable.Buffer;
+import scala.collection.immutable.Map;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,29 +47,20 @@ public class MavenDocumentSource extends AbstractDocumentSource {
         swaggerConfig.setSwaggerVersion(SwaggerSpec.version());
         List<ApiListingReference> apiListingReferences = new ArrayList<ApiListingReference>();
 
-        if (apiSource.getSwaggerInternalFilter() != null) {
-            FilterFactory$ filterFactory = FilterFactory$.MODULE$;
-            try {
-                LOG.info("Setting filter configuration: " + apiSource.getSwaggerInternalFilter());
-                filterFactory.filter_$eq((SwaggerSpecFilter) Class.forName(apiSource.getSwaggerInternalFilter()).newInstance());
-            } catch (Exception e) {
-                throw new GenerateException("Cannot load: " + apiSource.getSwaggerInternalFilter(), e);
-            }
-        }
-
         List<AuthorizationType> authorizationTypes = new ArrayList<AuthorizationType>();
-        for (Class c : apiSource.getValidClasses()) {
+	    java.util.Map<String, List<Resource>> resources = apiSource.getValidClasses();
+	    for (String resource : resources.keySet()) {
             ApiListing doc;
             try {
-                doc = getDocFromClass(c, swaggerConfig, getBasePath());
+                doc = getDocFromClass(resource, swaggerConfig, getBasePath(), resources.get(resource));
             } catch (Exception e) {
                 throw new GenerateException(e);
             }
             if (doc == null) continue;
-            LOG.info("Detect Resource:" + c.getName());
+//            LOG.info("Detect Resource:" + c.getName());
 
-            Buffer<AuthorizationType> buffer = doc.authorizations().toBuffer();
-            authorizationTypes.addAll(JavaConversions.asJavaList(buffer));
+//            Buffer<AuthorizationType> buffer = (Buffer<AuthorizationType>) doc.authorizations().toBuffer();
+//            authorizationTypes.addAll(JavaConversions.asJavaList(buffer));
             ApiListingReference apiListingReference = new ApiListingReference(doc.resourcePath(), doc.description(), doc.position());
             apiListingReferences.add(apiListingReference);
             acceptDocument(doc);
@@ -105,18 +88,69 @@ public class MavenDocumentSource extends AbstractDocumentSource {
             info.getLicense(), info.getLicenseUrl()));
     }
 
-    private ApiListing getDocFromClass(Class c, SwaggerConfig swaggerConfig, String basePath) throws Exception {
-        Api resource = (Api) c.getAnnotation(Api.class);
+    private ApiListing getDocFromClass(String resourcePath, SwaggerConfig swaggerConfig, String basePath, List<Resource> resources) throws Exception {
+//        Api resource = (Api) c.getAnnotation(Api.class);
 
-        if (resource == null) return null;
-        JaxrsApiReader reader = new DefaultJaxrsApiReader();
-        Option<ApiListing> apiListing = reader.read(basePath, c, swaggerConfig);
+//        if (resource == null) return null;
+//        JaxrsApiReader reader = new DefaultJaxrsApiReader();
+//        reader.read(basePath, c, swaggerConfig);
+
+	    String apiVersion = swaggerConfig.getApiVersion();
+	    String swaggerVersion = swaggerConfig.getSwaggerVersion();
+	    scala.collection.immutable.List<String> produces = scala.collection.immutable.List.empty();
+	    scala.collection.immutable.List<String> consumes = scala.collection.immutable.List.empty();
+	    scala.collection.immutable.List<String> protocols = scala.collection.immutable.List.empty();
+	    scala.collection.immutable.List<Authorization> authorizations = scala.collection.immutable.List.empty();
+
+	    List<ApiDescription> apiDescriptions = new ArrayList<>();
+	    for(Resource resource : resources) {
+			List<Operation> operations = new ArrayList<>();
+		    operations.add(getOperation(resource));
+		    ApiDescription apiDescription = new ApiDescription(resourcePath, Option.empty(),
+				    scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(operations.iterator())));
+		    apiDescriptions.add(apiDescription);
+	    }
+
+	    scala.collection.immutable.List<ApiDescription> apis = scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(apiDescriptions.iterator()));
+	    Option<Map<String, Model>> models = Option.empty();
+	    Option<String> description = Option.apply("description");
+	    int position = 0;
+	    ApiListing apiListing = new ApiListing(apiVersion, swaggerVersion, basePath, resourcePath, produces, consumes,
+		        protocols, authorizations, apis, models, description, position);
 
         if (None.canEqual(apiListing)) return null;
 
-        return specFilter.filter(apiListing.get(), FilterFactory.filter(),
-                                 Map$.MODULE$.<String, scala.collection.immutable.List<String>>empty(),
-                                 Map$.MODULE$.<String, String>empty(),
-                                 Map$.MODULE$.<String, scala.collection.immutable.List<String>>empty());
+        return apiListing;
     }
+
+	private Operation getOperation(Resource resource) {
+		String summary = "summary";
+		String notes = "notes";
+		String responseClass = "Task";
+		String nickname = "Nickname";
+		int position = 0;
+		scala.collection.immutable.List<String> produces = scala.collection.immutable.List.empty();
+		scala.collection.immutable.List<String> consumes = scala.collection.immutable.List.empty();
+		scala.collection.immutable.List<String> protocols = scala.collection.immutable.List.empty();
+		scala.collection.immutable.List<Authorization> authorisations = scala.collection.immutable.List.empty();
+
+		java.lang.reflect.Parameter[] methodParameters = resource.getMethod().getParameters();
+		List<Parameter> parameters = new ArrayList<>();
+		for(java.lang.reflect.Parameter methodParameter : methodParameters) {
+			String paramName = methodParameter.getName();
+
+			if(methodParameter.isAnnotationPresent(PathParam.class)) {
+				PathParam paramAnnotation = methodParameter.getAnnotation(PathParam.class);
+				paramName = paramAnnotation.value();
+			}
+			Parameter parameter = new Parameter(paramName, Option.<String>empty(), Option.<String>empty(), false, false,
+					methodParameter.getType().toString(), null, "path", Option.<String>empty());
+			parameters.add(parameter);
+		}
+
+		scala.collection.immutable.List<ResponseMessage> responseMessages = scala.collection.immutable.List.empty();
+		return new Operation(resource.getHttpMethod(), summary, notes, responseClass, nickname, position, produces, consumes,
+				protocols, authorisations, scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(parameters.iterator())),
+				responseMessages, Option.<String>empty());
+	}
 }

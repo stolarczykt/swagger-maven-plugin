@@ -1,8 +1,5 @@
 package com.github.kongchen.swagger.docgen.mavenplugin;
 
-import java.io.File;
-import java.util.List;
-
 import com.github.kongchen.swagger.docgen.AbstractDocumentSource;
 import com.github.kongchen.swagger.docgen.GenerateException;
 import org.apache.maven.plugin.AbstractMojo;
@@ -13,12 +10,15 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
+import java.io.File;
+import java.util.List;
+
 /**
  * Created with IntelliJ IDEA.
  * User: kongchen
  * Date: 3/7/13
  */
-@Mojo( name = "generate", defaultPhase = LifecyclePhase.COMPILE, configurator = "include-project-dependencies", 
+@Mojo( name = "generate", defaultPhase = LifecyclePhase.COMPILE, configurator = "include-project-dependencies",
        requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class ApiDocumentMojo extends AbstractMojo {
 
@@ -49,7 +49,61 @@ public class ApiDocumentMojo extends AbstractMojo {
         }
 
         try {
-            getLog().debug(apiSources.toString());
+//	        for (ApiSource apiSource : apiSources) {
+//		        ApplicationRoutes applicationRoutes = (ApplicationRoutes) Class.forName(apiSource.getLocations()).newInstance();
+//		        RouterImpl router = new RouterImpl(null, null);
+//		        applicationRoutes.init(router);
+//
+//		        Field allRouteBuildersField = router.getClass().getDeclaredField("allRouteBuilders");
+//		        allRouteBuildersField.setAccessible(true);
+//		        List<RouteBuilder> routeBuilders = (List<RouteBuilder>) allRouteBuildersField.get(router);
+//
+//		        for (RouteBuilder routeBuilder : routeBuilders) {
+//
+//			        Field controllerField = routeBuilder.getClass().getDeclaredField("controller");
+//			        controllerField.setAccessible(true);
+//			        Class controllerClass = (Class) controllerField.get(routeBuilder);
+//			        if (controllerClass != null) {
+//				        if (controllerClass.isAnnotationPresent(Api.class)) {
+//					        Api apiAnnotation = (Api) controllerClass.getAnnotation(Api.class);
+//					        Field controllerMethodField = routeBuilder.getClass().getDeclaredField("controllerMethod");
+//					        controllerMethodField.setAccessible(true);
+//					        Method controllerMethod = (Method) controllerMethodField.get(routeBuilder);
+//					        if (controllerMethod != null) {
+//						        if (controllerMethod.isAnnotationPresent(ApiOperation.class)) {
+//							        ApiOperation apiOperationAnnotation = controllerMethod.getAnnotation(ApiOperation.class);
+//							        System.out.println("*****>Api controller: " + controllerClass.getName() + ", desc: " + apiAnnotation.description());
+//							        System.out.println("***>Api method: " + controllerMethod.getName());
+//							        System.out.println("**>Value: " + apiOperationAnnotation.value());
+//							        System.out.println("**>Response: " + apiOperationAnnotation.response().getName());
+//						        }
+//					        }
+//				        }
+//			        }
+//		        }
+//	        }
+
+
+//		        System.out.println("======> " + routeBuilder);
+//		        Field httpMethodField = routeBuilder.getClass().getDeclaredField("httpMethod");
+//		        httpMethodField.setAccessible(true);
+//		        System.out.println("====> Http method: " + httpMethodField.get(routeBuilder));
+//
+//		        Field uriField = routeBuilder.getClass().getDeclaredField("uri");
+//		        uriField.setAccessible(true);
+//		        System.out.println("====> Uri: " + uriField.get(routeBuilder));
+//
+//		        System.out.println("====> Controller class: " + ((controllerField.get(routeBuilder) == null) ? "null": ((Class) controllerField.get(routeBuilder)).getName()));
+//
+//		        Field controllerMethodField = routeBuilder.getClass().getDeclaredField("controllerMethod");
+//		        controllerMethodField.setAccessible(true);
+//		        System.out.println("====> Controller method: " + ((controllerMethodField.get(routeBuilder) == null) ? "null": ((Method) controllerMethodField.get(routeBuilder)).getName()));
+//
+//		        Field resultField = routeBuilder.getClass().getDeclaredField("result");
+//		        resultField.setAccessible(true);
+//		        System.out.println("====> Result: " + resultField.get(routeBuilder));
+
+
             for (ApiSource apiSource : apiSources) {
 
                 AbstractDocumentSource documentSource = new MavenDocumentSource(apiSource, getLog());
@@ -64,20 +118,16 @@ public class ApiDocumentMojo extends AbstractMojo {
 						}
 					}
 				}
-				if (apiSource.getOutputTemplate()!=null)
-				{
-					documentSource.toDocuments();
-				}
                 documentSource.toSwaggerDocuments(
                         apiSource.getSwaggerUIDocBasePath() == null
                                 ? apiSource.getBasePath()
                                 : apiSource.getSwaggerUIDocBasePath());
             }
 
-        } catch (GenerateException e) {
-            throw new MojoFailureException(e.getMessage(), e);
         } catch (Exception e) {
-            throw new MojoExecutionException(e.getMessage(), e);
+            throw new MojoFailureException(e.getMessage(), e);
+        } catch (GenerateException e) {
+	        throw new RuntimeException(e);
         }
     }
 

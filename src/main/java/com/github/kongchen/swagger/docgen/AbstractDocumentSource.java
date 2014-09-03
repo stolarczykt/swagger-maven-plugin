@@ -5,9 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.kongchen.swagger.docgen.mavenplugin.ApiSourceInfo;
-import com.github.kongchen.swagger.docgen.mustache.OutputTemplate;
-import com.github.mustachejava.DefaultMustacheFactory;
-import com.github.mustachejava.Mustache;
 import com.wordnik.swagger.converter.ModelConverters;
 import com.wordnik.swagger.converter.OverrideConverter;
 import com.wordnik.swagger.core.util.JsonSerializer;
@@ -15,18 +12,14 @@ import com.wordnik.swagger.core.util.JsonUtil;
 import com.wordnik.swagger.model.ApiListing;
 import com.wordnik.swagger.model.ApiListingReference;
 import com.wordnik.swagger.model.ResourceListing;
-
 import org.apache.commons.io.FileUtils;
-
 import scala.collection.Iterator;
 import scala.collection.JavaConversions;
 
-import java.io.*;
-import java.net.MalformedURLException;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,8 +51,6 @@ public abstract class AbstractDocumentSource {
     private ApiSourceInfo apiInfo;
 
 	private ObjectMapper mapper = new ObjectMapper();
-
-	private OutputTemplate outputTemplate;
 
 	private boolean useOutputFlatStructure;
 
@@ -93,10 +84,6 @@ public abstract class AbstractDocumentSource {
 
 	public void setApiVersion(String apiVersion) {
 		this.apiVersion = apiVersion;
-	}
-
-	public OutputTemplate getOutputTemplate() {
-		return outputTemplate;
 	}
 
     public ApiSourceInfo getApiInfo() {
@@ -297,46 +284,7 @@ public abstract class AbstractDocumentSource {
 		return serviceFile;
 	}
 
-	public OutputTemplate prepareMustacheTemplate() throws GenerateException {
-		this.outputTemplate = new OutputTemplate(this);
-		return outputTemplate;
-	}
 
-	public void toDocuments() throws GenerateException {
-		if (outputTemplate == null) {
-			prepareMustacheTemplate();
-		}
-		if (outputTemplate.getApiDocuments().isEmpty()) {
-			LOG.warn("nothing to write.");
-			return;
-		}
-		LOG.info("Writing doc to " + outputPath + "...");
-
-		FileOutputStream fileOutputStream;
-		try {
-			fileOutputStream = new FileOutputStream(outputPath);
-		} catch (FileNotFoundException e) {
-			throw new GenerateException(e);
-		}
-		OutputStreamWriter writer = new OutputStreamWriter(fileOutputStream,
-				Charset.forName("UTF-8"));
-
-		try {
-			URL url = getTemplateUri().toURL();
-			InputStreamReader reader = new InputStreamReader(url.openStream(),
-					Charset.forName("UTF-8"));
-			Mustache mustache = getMustacheFactory().compile(reader,
-					templatePath);
-
-			mustache.execute(writer, outputTemplate).flush();
-			writer.close();
-			LOG.info("Done!");
-		} catch (MalformedURLException e) {
-			throw new GenerateException(e);
-		} catch (IOException e) {
-			throw new GenerateException(e);
-		}
-	}
 
 	private URI getTemplateUri() throws GenerateException {
 		URI uri;
@@ -366,11 +314,5 @@ public abstract class AbstractDocumentSource {
 		return uri;
 	}
 
-	private DefaultMustacheFactory getMustacheFactory() {
-		if (mustacheFileRoot == null) {
-			return new DefaultMustacheFactory();
-		} else {
-			return new DefaultMustacheFactory(new File(mustacheFileRoot));
-		}
-	}
+
 }
