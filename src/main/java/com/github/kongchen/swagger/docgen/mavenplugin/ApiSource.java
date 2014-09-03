@@ -40,6 +40,9 @@ public class ApiSource {
 	@Parameter(required = true)
 	private String basePath;
 
+	@Parameter(required = true)
+	private String apiUri;
+
 	/**
 	 * <code>outputTemplate</code> is the path of a mustache template file,
 	 * see more details in next section.
@@ -72,9 +75,9 @@ public class ApiSource {
 	@Parameter
 	private String swaggerInternalFilter;
 
-	public Map<String, List<Resource>> getValidClasses() throws GenerateException {
+	public Map<Class<?>, Resource> getValidClasses() throws GenerateException {
 
-		Map<String, List<Resource>> resources = new HashMap<>();
+		Map<Class<?>, Resource> resources = new HashMap<>();
 
 		try {
 			ApplicationRoutes applicationRoutes = (ApplicationRoutes) Class.forName(locations).newInstance();
@@ -96,21 +99,24 @@ public class ApiSource {
 						Field httpMethodField = routeBuilder.getClass().getDeclaredField("httpMethod");
 						httpMethodField.setAccessible(true);
 						String httpMethod = (String) httpMethodField.get(routeBuilder);
+
 						Field uriField = routeBuilder.getClass().getDeclaredField("uri");
 						uriField.setAccessible(true);
 						String uri = (String) uriField.get(routeBuilder);
+
 						Field methodField = routeBuilder.getClass().getDeclaredField("controllerMethod");
 						methodField.setAccessible(true);
 						Method method = (Method) methodField.get(routeBuilder);
 
-						Resource resource = new Resource(controllerClass, method, httpMethod);
+						RouteMethod routeMethod = new RouteMethod(uri, httpMethod, method);
 
-						if (resources.containsKey(uri)) {
-							resources.get(uri).add(resource);
+						if (resources.containsKey(controllerClass)) {
+							Resource resource = resources.get(controllerClass);
+							resource.addRouteMethod(routeMethod);
 						} else {
-							List<Resource> routies = new ArrayList<>();
-							routies.add(resource);
-							resources.put(uri, routies);
+							Resource resource = new Resource(controllerClass, uri);
+							resource.addRouteMethod(routeMethod);
+							resources.put(controllerClass, resource);
 						}
 					}
 				}
@@ -215,5 +221,13 @@ public class ApiSource {
 
 	public void setSwaggerInternalFilter(String swaggerInternalFilter) {
 		this.swaggerInternalFilter = swaggerInternalFilter;
+	}
+
+	public String getApiUri() {
+		return apiUri;
+	}
+
+	public void setApiUri(String apiUri) {
+		this.apiUri = apiUri;
 	}
 }

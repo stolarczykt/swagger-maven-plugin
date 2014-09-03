@@ -48,11 +48,11 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 		List<ApiListingReference> apiListingReferences = new ArrayList<ApiListingReference>();
 
 		List<AuthorizationType> authorizationTypes = new ArrayList<AuthorizationType>();
-		java.util.Map<String, List<Resource>> resources = apiSource.getValidClasses();
-		for (String resource : resources.keySet()) {
+		java.util.Map<Class<?>, Resource> resources = apiSource.getValidClasses();
+		for (Class<?> key : resources.keySet()) {
 			ApiListing doc;
 			try {
-				doc = getDocFromClass(resource, swaggerConfig, getBasePath(), resources.get(resource));
+				doc = getDocFromClass(resources.get(key), swaggerConfig, getBasePath());
 			} catch (Exception e) {
 				throw new GenerateException(e);
 			}
@@ -88,7 +88,7 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 				info.getLicense(), info.getLicenseUrl()));
 	}
 
-	private ApiListing getDocFromClass(String resourcePath, SwaggerConfig swaggerConfig, String basePath, List<Resource> resources) throws Exception {
+	private ApiListing getDocFromClass(Resource resource, SwaggerConfig swaggerConfig, String basePath) throws Exception {
 //        Api resource = (Api) c.getAnnotation(Api.class);
 
 //        if (resource == null) return null;
@@ -103,10 +103,10 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 		scala.collection.immutable.List<Authorization> authorizations = scala.collection.immutable.List.empty();
 
 		List<ApiDescription> apiDescriptions = new ArrayList<>();
-		for (Resource resource : resources) {
+		for (RouteMethod routeMethod : resource.getRouteMethods()) {
 			List<Operation> operations = new ArrayList<>();
-			operations.add(getOperation(resource));
-			ApiDescription apiDescription = new ApiDescription(resourcePath, Option.empty(),
+			operations.add(getOperation(routeMethod));
+			ApiDescription apiDescription = new ApiDescription(routeMethod.getUri(), Option.empty(),
 					scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(operations.iterator())));
 			apiDescriptions.add(apiDescription);
 		}
@@ -115,7 +115,7 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 		Option<Map<String, Model>> models = Option.empty();
 		Option<String> description = Option.apply("description");
 		int position = 0;
-		ApiListing apiListing = new ApiListing(apiVersion, swaggerVersion, basePath, resourcePath, produces, consumes,
+		ApiListing apiListing = new ApiListing(apiVersion, swaggerVersion, basePath, resource.getResourceUri(), produces, consumes,
 				protocols, authorizations, apis, models, description, position);
 
 		if (None.canEqual(apiListing)) return null;
@@ -123,7 +123,7 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 		return apiListing;
 	}
 
-	private Operation getOperation(Resource resource) {
+	private Operation getOperation(RouteMethod routeMethod) {
 		String summary = "summary";
 		String notes = "notes";
 		String responseClass = "Task";
@@ -134,7 +134,7 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 		scala.collection.immutable.List<String> protocols = scala.collection.immutable.List.empty();
 		scala.collection.immutable.List<Authorization> authorisations = scala.collection.immutable.List.empty();
 
-		java.lang.reflect.Parameter[] methodParameters = resource.getMethod().getParameters();
+		java.lang.reflect.Parameter[] methodParameters = routeMethod.getControllerMethod().getParameters();
 		List<Parameter> parameters = new ArrayList<>();
 		for (java.lang.reflect.Parameter methodParameter : methodParameters) {
 			String paramName = methodParameter.getName();
@@ -149,7 +149,7 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 		}
 
 		scala.collection.immutable.List<ResponseMessage> responseMessages = scala.collection.immutable.List.empty();
-		return new Operation(resource.getHttpMethod(), summary, notes, responseClass, nickname, position, produces, consumes,
+		return new Operation(routeMethod.getHttpMethod(), summary, notes, responseClass, nickname, position, produces, consumes,
 				protocols, authorisations, scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(parameters.iterator())),
 				responseMessages, Option.<String>empty());
 	}

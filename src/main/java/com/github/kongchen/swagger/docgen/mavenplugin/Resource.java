@@ -1,28 +1,50 @@
 package com.github.kongchen.swagger.docgen.mavenplugin;
 
-import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Resource {
 
-	private Class<?> controller;
-	private Method method;
-	private String httpMethod;
+	private Class<?> controllerClass;
+	private String resourceUri;
+	private List<RouteMethod> routeMethods;
 
-	public Resource(Class<?> controller, Method method, String httpMethod) {
-		this.controller = controller;
-		this.method = method;
-		this.httpMethod = httpMethod;
+	public Resource(Class<?> controllerClass, String resourceUri) {
+		this.controllerClass = controllerClass;
+		this.resourceUri = resourceUri;
+		this.routeMethods = new ArrayList<>();
 	}
 
-	public Class<?> getController() {
-		return controller;
+	public Class<?> getControllerClass() {
+		return controllerClass;
 	}
 
-	public Method getMethod() {
-		return method;
+	public String getResourceUri() {
+		return resourceUri;
 	}
 
-	public String getHttpMethod() {
-		return httpMethod;
+	public List<RouteMethod> getRouteMethods() {
+		return Collections.unmodifiableList(routeMethods);
+	}
+
+	public void addRouteMethod(RouteMethod routeMethod) {
+		routeMethods.add(routeMethod);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Resource resource = (Resource) o;
+
+		return controllerClass.equals(resource.controllerClass);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = controllerClass.hashCode();
+		return 31 * result;
 	}
 }
