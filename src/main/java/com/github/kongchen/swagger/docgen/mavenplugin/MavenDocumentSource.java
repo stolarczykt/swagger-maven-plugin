@@ -104,17 +104,33 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 		scala.collection.immutable.List<Authorization> authorizations = apiListing.authorizations();
 
 		List<ApiDescription> apiDescriptions = new ArrayList<>();
-		for (RouteMethod routeMethod : resource.getRouteMethods()) {
-//			scala.collection.immutable.List<ApiDescription> apis = apiListing.apis();
-//			apis.foreach();
+		scala.collection.immutable.List<ApiDescription> apis = apiListing.apis();
+		List<ApiDescription> apiDescriptionsJava = JavaConversions.asJavaList(apis);
+
+		for(ApiDescription apiDescription : apiDescriptionsJava) {
+
+			List<Operation> operationsJava = JavaConversions.asJavaList(apiDescription.operations());
 			List<Operation> operations = new ArrayList<>();
-			operations.add(getOperation(routeMethod));
-			ApiDescription apiDescription = new ApiDescription(routeMethod.getUri(), Option.empty(),
+			for(Operation operation : operationsJava) {
+				for (RouteMethod routeMethod : resource.getRouteMethods()) {
+					if(routeMethod.getControllerMethod().getName().equals(operation.nickname())){
+						String httpMethod = routeMethod.getHttpMethod();
+						operations.add(new Operation(httpMethod, operation.summary(), operation.notes(),
+								operation.responseClass(), operation.nickname(), operation.position(), operation.produces(),
+								operation.consumes(), operation.protocols(), operation.authorizations(),
+								operation.parameters(), operation.responseMessages(), operation.deprecated()));
+					}
+				}
+			}
+
+			ApiDescription newApiDescription = new ApiDescription(resource.getResourceUri(), Option.empty(),
 					scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(operations.iterator())));
-			apiDescriptions.add(apiDescription);
+			apiDescriptions.add(newApiDescription);
 		}
 
-		scala.collection.immutable.List<ApiDescription> apis = scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(apiDescriptions.iterator()));
+
+
+		apis = scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(apiDescriptions.iterator()));
 
 		Option<Map<String, Model>> models = apiListing.models();
 
