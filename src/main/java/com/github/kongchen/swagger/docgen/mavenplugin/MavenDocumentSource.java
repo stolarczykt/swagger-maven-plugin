@@ -6,6 +6,8 @@ import com.github.kongchen.swagger.docgen.LogAdapter;
 import com.wordnik.swagger.config.SwaggerConfig;
 import com.wordnik.swagger.core.SwaggerSpec;
 import com.wordnik.swagger.core.filter.SpecFilter;
+import com.wordnik.swagger.jaxrs.JaxrsApiReader;
+import com.wordnik.swagger.jaxrs.reader.DefaultJaxrsApiReader;
 import com.wordnik.swagger.model.*;
 import ninja.params.PathParam;
 import org.apache.maven.plugin.logging.Log;
@@ -92,18 +94,19 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 //        Api resource = (Api) c.getAnnotation(Api.class);
 
 //        if (resource == null) return null;
-//        JaxrsApiReader reader = new DefaultJaxrsApiReader();
-//        reader.read(basePath, c, swaggerConfig);
-
+        JaxrsApiReader reader = new DefaultJaxrsApiReader();
+		ApiListing apiListing = reader.read(basePath, resource.getControllerClass(), swaggerConfig).get();
 		String apiVersion = swaggerConfig.getApiVersion();
-		String swaggerVersion = swaggerConfig.getSwaggerVersion();
-		scala.collection.immutable.List<String> produces = scala.collection.immutable.List.empty();
-		scala.collection.immutable.List<String> consumes = scala.collection.immutable.List.empty();
-		scala.collection.immutable.List<String> protocols = scala.collection.immutable.List.empty();
-		scala.collection.immutable.List<Authorization> authorizations = scala.collection.immutable.List.empty();
+		String swaggerVersion = apiListing.swaggerVersion();
+		scala.collection.immutable.List<String> produces = apiListing.produces();
+		scala.collection.immutable.List<String> consumes = apiListing.consumes();
+		scala.collection.immutable.List<String> protocols = apiListing.protocols();
+		scala.collection.immutable.List<Authorization> authorizations = apiListing.authorizations();
 
 		List<ApiDescription> apiDescriptions = new ArrayList<>();
 		for (RouteMethod routeMethod : resource.getRouteMethods()) {
+//			scala.collection.immutable.List<ApiDescription> apis = apiListing.apis();
+//			apis.foreach();
 			List<Operation> operations = new ArrayList<>();
 			operations.add(getOperation(routeMethod));
 			ApiDescription apiDescription = new ApiDescription(routeMethod.getUri(), Option.empty(),
@@ -112,15 +115,18 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 		}
 
 		scala.collection.immutable.List<ApiDescription> apis = scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(apiDescriptions.iterator()));
-		Option<Map<String, Model>> models = Option.empty();
-		Option<String> description = Option.apply("description");
-		int position = 0;
-		ApiListing apiListing = new ApiListing(apiVersion, swaggerVersion, basePath, resource.getResourceUri(), produces, consumes,
+
+		Option<Map<String, Model>> models = apiListing.models();
+
+
+		Option<String> description = apiListing.description();
+		int position = apiListing.position();
+		ApiListing apiListing2 = new ApiListing(apiVersion, swaggerVersion, basePath, resource.getResourceUri(), produces, consumes,
 				protocols, authorizations, apis, models, description, position);
 
 		if (None.canEqual(apiListing)) return null;
 
-		return apiListing;
+		return apiListing2;
 	}
 
 	private Operation getOperation(RouteMethod routeMethod) {
