@@ -14,6 +14,7 @@ import scala.None;
 import scala.Option;
 import scala.collection.JavaConversions;
 import scala.collection.immutable.Map;
+import scala.collection.mutable.Buffer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,10 +59,9 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 				throw new GenerateException(e);
 			}
 			if (doc == null) continue;
-//            LOG.info("Detect Resource:" + c.getName());
 
-//            Buffer<AuthorizationType> buffer = (Buffer<AuthorizationType>) doc.authorizations().toBuffer();
-//            authorizationTypes.addAll(JavaConversions.asJavaList(buffer));
+			Buffer<AuthorizationType> buffer = doc.authorizations().toBuffer();
+			authorizationTypes.addAll(JavaConversions.asJavaList(buffer));
 			ApiListingReference apiListingReference = new ApiListingReference(doc.resourcePath(), doc.description(), doc.position());
 			apiListingReferences.add(apiListingReference);
 			acceptDocument(doc);
