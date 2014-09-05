@@ -1,5 +1,6 @@
 package com.github.kongchen.swagger.docgen.util;
 
+import com.github.kongchen.swagger.docgen.mavenplugin.MethodUriInfo;
 import com.wordnik.swagger.model.AllowableListValues;
 import com.wordnik.swagger.model.AllowableRangeValues;
 import com.wordnik.swagger.model.AllowableValues;
@@ -12,6 +13,21 @@ import scala.Option;
  * Date: 1/21/14
  */
 public class Utils {
+
+	public static MethodUriInfo getMethodUriInfo(String uri, String apiUri) {
+
+		String resourceUri = "";
+		String methodUri = "";
+		if(uri.startsWith(apiUri)) {
+			String[] split = uri.replaceFirst("/", "").split("/");
+			resourceUri = (split.length > 1) ? ("/" + split[1]) : "";
+			if(uri.length() > apiUri.length()) {
+				methodUri = uri.substring(apiUri.length() + resourceUri.length());
+			}
+		}
+		return new MethodUriInfo(resourceUri, methodUri);
+	}
+
 	public static String getStrInOption(Option<String> scalaStr) {
 		if (scalaStr.isEmpty()) return null;
 		return scalaStr.get();
