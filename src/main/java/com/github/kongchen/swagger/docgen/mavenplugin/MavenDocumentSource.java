@@ -9,7 +9,6 @@ import com.wordnik.swagger.core.filter.SpecFilter;
 import com.wordnik.swagger.jaxrs.JaxrsApiReader;
 import com.wordnik.swagger.jaxrs.reader.DefaultJaxrsApiReader;
 import com.wordnik.swagger.model.*;
-import ninja.params.PathParam;
 import org.apache.maven.plugin.logging.Log;
 import scala.None;
 import scala.Option;
@@ -114,16 +113,33 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 			for(Operation operation : operationsJava) {
 				for (RouteMethod routeMethod : resource.getRouteMethods()) {
 					if(routeMethod.getControllerMethod().getName().equals(operation.nickname())){
+
+						scala.collection.immutable.List<Parameter> parameters = operation.parameters();
+						List<Parameter> resultParameters = new ArrayList<>();
+						List<Parameter> parametersJava = JavaConversions.asJavaList(parameters);
+						java.lang.reflect.Parameter[] methodParameters = routeMethod.getControllerMethod().getParameters();
+
+						for(Parameter parameter : parametersJava){
+							for (java.lang.reflect.Parameter methodParameter : methodParameters) {
+								ParameterSpecification parameterSpecification = new ParameterSpecification(methodParameter, parameter);
+
+								resultParameters.add(new Parameter(parameterSpecification.getParameterName(), parameter.description(), parameter.defaultValue(),
+										parameter.required(), parameter.allowMultiple(), parameter.dataType(),
+										parameter.allowableValues(), parameterSpecification.getParameterType(), parameter.paramAccess()));
+							}
+						}
+
 						String httpMethod = routeMethod.getHttpMethod();
 						operations.add(new Operation(httpMethod, operation.summary(), operation.notes(),
 								operation.responseClass(), operation.nickname(), operation.position(), operation.produces(),
 								operation.consumes(), operation.protocols(), operation.authorizations(),
-								operation.parameters(), operation.responseMessages(), operation.deprecated()));
+								scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(resultParameters.iterator())),
+								operation.responseMessages(), operation.deprecated()));
 					}
 				}
 			}
 
-			ApiDescription newApiDescription = new ApiDescription(resource.getResourceUri(), Option.empty(),
+			ApiDescription newApiDescription = new ApiDescription(resource.getResourceUri()+"/{id}", Option.empty(),
 					scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(operations.iterator())));
 			apiDescriptions.add(newApiDescription);
 		}
@@ -137,7 +153,7 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 
 		Option<String> description = apiListing.description();
 		int position = apiListing.position();
-		ApiListing apiListing2 = new ApiListing(apiVersion, swaggerVersion, basePath, resource.getResourceUri(), produces, consumes,
+		ApiListing apiListing2 = new ApiListing(apiVersion, swaggerVersion, basePath+"/{id}", resource.getResourceUri(), produces, consumes,
 				protocols, authorizations, apis, models, description, position);
 
 		if (None.canEqual(apiListing)) return null;
@@ -145,34 +161,4 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 		return apiListing2;
 	}
 
-	private Operation getOperation(RouteMethod routeMethod) {
-		String summary = "summary";
-		String notes = "notes";
-		String responseClass = "Task";
-		String nickname = "Nickname";
-		int position = 0;
-		scala.collection.immutable.List<String> produces = scala.collection.immutable.List.empty();
-		scala.collection.immutable.List<String> consumes = scala.collection.immutable.List.empty();
-		scala.collection.immutable.List<String> protocols = scala.collection.immutable.List.empty();
-		scala.collection.immutable.List<Authorization> authorisations = scala.collection.immutable.List.empty();
-
-		java.lang.reflect.Parameter[] methodParameters = routeMethod.getControllerMethod().getParameters();
-		List<Parameter> parameters = new ArrayList<>();
-		for (java.lang.reflect.Parameter methodParameter : methodParameters) {
-			String paramName = methodParameter.getName();
-
-			if (methodParameter.isAnnotationPresent(PathParam.class)) {
-				PathParam paramAnnotation = methodParameter.getAnnotation(PathParam.class);
-				paramName = paramAnnotation.value();
-			}
-			Parameter parameter = new Parameter(paramName, Option.<String>empty(), Option.<String>empty(), false, false,
-					methodParameter.getType().toString(), null, "path", Option.<String>empty());
-			parameters.add(parameter);
-		}
-
-		scala.collection.immutable.List<ResponseMessage> responseMessages = scala.collection.immutable.List.empty();
-		return new Operation(routeMethod.getHttpMethod(), summary, notes, responseClass, nickname, position, produces, consumes,
-				protocols, authorisations, scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(parameters.iterator())),
-				responseMessages, Option.<String>empty());
-	}
 }
