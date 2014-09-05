@@ -11,6 +11,9 @@ public class ParameterSpecification {
 	private String parameterType;
 
 	public ParameterSpecification(Parameter methodParameter, com.wordnik.swagger.model.Parameter parameter) {
+		parameterName = parameter.name();
+		parameterType = parameter.paramType();
+
 		if (methodParameter.isAnnotationPresent(PathParam.class)) {
 			PathParam paramAnnotation = methodParameter.getAnnotation(PathParam.class);
 			parameterName = paramAnnotation.value();
@@ -22,9 +25,6 @@ public class ParameterSpecification {
 			parameterName = paramAnnotation.value();
 			parameterType = "query";
 		}
-
-		parameterName = parameter.name();
-		parameterType = parameter.paramType();
 	}
 
 	public String getParameterName() {

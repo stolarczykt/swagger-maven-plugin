@@ -16,10 +16,7 @@ import scala.collection.JavaConversions;
 import scala.collection.immutable.Map;
 import scala.collection.mutable.Buffer;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -107,45 +104,57 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 		scala.collection.immutable.List<ApiDescription> apis = apiListing.apis();
 		List<ApiDescription> apiDescriptionsJava = JavaConversions.asJavaList(apis);
 
-		for(ApiDescription apiDescription : apiDescriptionsJava) {
-
-			List<Operation> operationsJava = JavaConversions.asJavaList(apiDescription.operations());
-			List<Operation> operations = new ArrayList<>();
-			for(Operation operation : operationsJava) {
-				for (RouteMethod routeMethod : resource.getRouteMethods()) {
-					if(routeMethod.getControllerMethod().getName().equals(operation.nickname())){
-
-						scala.collection.immutable.List<Parameter> parameters = operation.parameters();
-						List<Parameter> resultParameters = new ArrayList<>();
-						List<Parameter> parametersJava = JavaConversions.asJavaList(parameters);
-						java.lang.reflect.Parameter[] methodParameters = routeMethod.getControllerMethod().getParameters();
-
-						for(Parameter parameter : parametersJava){
-							for (java.lang.reflect.Parameter methodParameter : methodParameters) {
-								ParameterSpecification parameterSpecification = new ParameterSpecification(methodParameter, parameter);
-
-								resultParameters.add(new Parameter(parameterSpecification.getParameterName(), parameter.description(), parameter.defaultValue(),
-										parameter.required(), parameter.allowMultiple(), parameter.dataType(),
-										parameter.allowableValues(), parameterSpecification.getParameterType(), parameter.paramAccess()));
-							}
-						}
-
-						String httpMethod = routeMethod.getHttpMethod();
-						operations.add(new Operation(httpMethod, operation.summary(), operation.notes(),
-								operation.responseClass(), operation.nickname(), operation.position(), operation.produces(),
-								operation.consumes(), operation.protocols(), operation.authorizations(),
-								scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(resultParameters.iterator())),
-								operation.responseMessages(), operation.deprecated()));
-					}
-				}
+		List<RouteMethod> routeMethods = resource.getRouteMethods();
+		java.util.Map<String, List<RouteMethod>> routeMap = new HashMap<>();
+		for (RouteMethod routeMethod : routeMethods) {
+			String uri = resource.getResourceUri() + routeMethod.getUri();
+			if(routeMap.containsKey(uri)) {
+				routeMap.get(uri).add(routeMethod);
+			} else {
+				ArrayList<RouteMethod> value = new ArrayList<>();
+				value.add(routeMethod);
+				routeMap.put(uri, value);
 			}
-
-			ApiDescription newApiDescription = new ApiDescription(resource.getResourceUri(), Option.empty(),
-					scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(operations.iterator())));
-			apiDescriptions.add(newApiDescription);
 		}
 
+		for(ApiDescription apiDescription : apiDescriptionsJava) {
+			List<Operation> operationsJava = JavaConversions.asJavaList(apiDescription.operations());
+			for(String key : routeMap.keySet()) {
+				List<Operation> operations = new ArrayList<>();
+				for(RouteMethod routeMethod : routeMap.get(key)) {
+					for(Operation operation : operationsJava) {
+						if(routeMethod.getControllerMethod().getName().equals(operation.nickname())){
 
+							scala.collection.immutable.List<Parameter> parameters = operation.parameters();
+							List<Parameter> resultParameters = new ArrayList<>();
+							List<Parameter> parametersJava = JavaConversions.asJavaList(parameters);
+							java.lang.reflect.Parameter[] methodParameters = routeMethod.getControllerMethod().getParameters();
+
+							//TO-DO fix it - create parameter manually because now is made 2 times
+							for(Parameter parameter : parametersJava){
+								for (java.lang.reflect.Parameter methodParameter : methodParameters) {
+									ParameterSpecification parameterSpecification = new ParameterSpecification(methodParameter, parameter);
+
+									resultParameters.add(new Parameter(parameterSpecification.getParameterName(), parameter.description(), parameter.defaultValue(),
+											parameter.required(), parameter.allowMultiple(), parameter.dataType(),
+											parameter.allowableValues(), parameterSpecification.getParameterType(), parameter.paramAccess()));
+								}
+							}
+
+							String httpMethod = routeMethod.getHttpMethod();
+							operations.add(new Operation(httpMethod, operation.summary(), operation.notes(),
+									operation.responseClass(), operation.nickname(), operation.position(), operation.produces(),
+									operation.consumes(), operation.protocols(), operation.authorizations(),
+									scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(resultParameters.iterator())),
+									operation.responseMessages(), operation.deprecated()));
+						}
+					}
+				}
+				ApiDescription newApiDescription = new ApiDescription(key, Option.empty(),
+						scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(operations.iterator())));
+				apiDescriptions.add(newApiDescription);
+			}
+		}
 
 		apis = scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(apiDescriptions.iterator()));
 
