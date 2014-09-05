@@ -11,6 +11,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
+import static com.github.kongchen.swagger.docgen.util.Utils.getMethodUriInfo;
+
 /**
  * Created with IntelliJ IDEA.
  * User: kongchen
@@ -103,18 +105,20 @@ public class ApiSource {
 						Field uriField = routeBuilder.getClass().getDeclaredField("uri");
 						uriField.setAccessible(true);
 						String uri = (String) uriField.get(routeBuilder);
+						MethodUriInfo methodUriInfo = getMethodUriInfo(uri, apiUri);
 
 						Field methodField = routeBuilder.getClass().getDeclaredField("controllerMethod");
 						methodField.setAccessible(true);
 						Method method = (Method) methodField.get(routeBuilder);
 
-						RouteMethod routeMethod = new RouteMethod(uri, httpMethod, method);
+						RouteMethod routeMethod = new RouteMethod(methodUriInfo.getMethodUri(), httpMethod, method);
 
 						if (resources.containsKey(controllerClass)) {
+							//TO-DO check if resource URI is the same
 							Resource resource = resources.get(controllerClass);
 							resource.addRouteMethod(routeMethod);
 						} else {
-							Resource resource = new Resource(controllerClass, uri);
+							Resource resource = new Resource(controllerClass, methodUriInfo.getResourceUri());
 							resource.addRouteMethod(routeMethod);
 							resources.put(controllerClass, resource);
 						}

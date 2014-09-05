@@ -37,7 +37,7 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 				apiSource.getOutputPath(), apiSource.getOutputTemplate(), apiSource.getSwaggerDirectory(), apiSource.mustacheFileRoot, apiSource.isUseOutputFlatStructure(), apiSource.getOverridingModels());
 
 		setApiVersion(apiSource.getApiVersion());
-		setBasePath(apiSource.getBasePath());
+		setBasePath(apiSource.getBasePath() + apiSource.getApiUri());
 		setApiInfo(apiSource.getApiInfo());
 		this.apiSource = apiSource;
 	}
@@ -93,6 +93,7 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 //        Api resource = (Api) c.getAnnotation(Api.class);
 
 //        if (resource == null) return null;
+		basePath = basePath + apiSource.getApiUri();
         JaxrsApiReader reader = new DefaultJaxrsApiReader();
 		ApiListing apiListing = reader.read(basePath, resource.getControllerClass(), swaggerConfig).get();
 		String apiVersion = swaggerConfig.getApiVersion();
@@ -139,7 +140,7 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 				}
 			}
 
-			ApiDescription newApiDescription = new ApiDescription(resource.getResourceUri()+"/{id}", Option.empty(),
+			ApiDescription newApiDescription = new ApiDescription(resource.getResourceUri(), Option.empty(),
 					scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(operations.iterator())));
 			apiDescriptions.add(newApiDescription);
 		}
@@ -153,7 +154,7 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 
 		Option<String> description = apiListing.description();
 		int position = apiListing.position();
-		ApiListing apiListing2 = new ApiListing(apiVersion, swaggerVersion, basePath+"/{id}", resource.getResourceUri(), produces, consumes,
+		ApiListing apiListing2 = new ApiListing(apiVersion, swaggerVersion, basePath + apiSource.getApiUri(), resource.getResourceUri(), produces, consumes,
 				protocols, authorizations, apis, models, description, position);
 
 		if (None.canEqual(apiListing)) return null;
