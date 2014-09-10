@@ -44,7 +44,7 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 		List<ApiListingReference> apiListingReferences = new ArrayList<ApiListingReference>();
 
 		List<AuthorizationType> authorizationTypes = new ArrayList<AuthorizationType>();
-		java.util.Map<Class<?>, Resource> resources = apiSource.getValidClasses();
+		java.util.Map<Class<?>, Resource> resources = apiSource.getValidResources();
 		for (Class<?> key : resources.keySet()) {
 			ApiListing doc;
 			try {
@@ -84,9 +84,7 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 	}
 
 	private ApiListing getDocFromClass(Resource resource, SwaggerConfig swaggerConfig, String basePath) throws Exception {
-//        Api resource = (Api) c.getAnnotation(Api.class);
 
-//        if (resource == null) return null;
 		basePath = basePath + apiSource.getApiUri();
         JaxrsApiReader reader = new DefaultJaxrsApiReader();
 		ApiListing apiListing = reader.read(basePath, resource.getControllerClass(), swaggerConfig).get();

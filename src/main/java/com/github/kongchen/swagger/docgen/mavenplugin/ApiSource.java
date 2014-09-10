@@ -1,15 +1,17 @@
 package com.github.kongchen.swagger.docgen.mavenplugin;
 
 import com.github.kongchen.swagger.docgen.GenerateException;
+import com.github.kongchen.swagger.docgen.reflection.ClassMember;
 import com.wordnik.swagger.annotations.Api;
 import ninja.RouteBuilder;
 import ninja.RouterImpl;
 import ninja.application.ApplicationRoutes;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.github.kongchen.swagger.docgen.util.Utils.getMethodUriInfo;
 
@@ -71,58 +73,78 @@ public class ApiSource {
 	@Parameter
 	private String overridingModels;
 
-	public Map<Class<?>, Resource> getValidClasses() throws GenerateException {
+	public Map<Class<?>, Resource> getValidResources() throws GenerateException {
 
+		List<RouteBuilder> routeBuilders = getRouteBuilders();
+
+		return buildResourcesFrom(routeBuilders);
+	}
+
+	private Map<Class<?>, Resource> buildResourcesFrom(List<RouteBuilder> routeBuilders) {
 		Map<Class<?>, Resource> resources = new HashMap<>();
+		for (RouteBuilder routeBuilder : routeBuilders) {
+			Class resourceClass = getResourceClass(routeBuilder);
+			if (resourceClass != null) {
+				if (resourceClass.isAnnotationPresent(Api.class)) {
 
-		try {
-			ApplicationRoutes applicationRoutes = (ApplicationRoutes) Class.forName(routesClass).newInstance();
-			RouterImpl router = new RouterImpl(null, null);
-			applicationRoutes.init(router);
+					String httpMethodName = getHttpMethodName(routeBuilder);
+					MethodUriInfo methodUriInfo = getMethodUriInfoFrom(routeBuilder);
+					Method method = getOperationMethod(routeBuilder);
 
-			Field allRouteBuildersField = router.getClass().getDeclaredField("allRouteBuilders");
-			allRouteBuildersField.setAccessible(true);
-			List<RouteBuilder> routeBuilders = (List<RouteBuilder>) allRouteBuildersField.get(router);
+					RouteMethod routeMethod = new RouteMethod(methodUriInfo.getMethodUri(), httpMethodName, method);
 
-			for (RouteBuilder routeBuilder : routeBuilders) {
-
-				Field controllerField = routeBuilder.getClass().getDeclaredField("controller");
-				controllerField.setAccessible(true);
-				Class controllerClass = (Class) controllerField.get(routeBuilder);
-				if (controllerClass != null) {
-					if (controllerClass.isAnnotationPresent(Api.class)) {
-
-						Field httpMethodField = routeBuilder.getClass().getDeclaredField("httpMethod");
-						httpMethodField.setAccessible(true);
-						String httpMethod = (String) httpMethodField.get(routeBuilder);
-
-						Field uriField = routeBuilder.getClass().getDeclaredField("uri");
-						uriField.setAccessible(true);
-						String uri = (String) uriField.get(routeBuilder);
-						MethodUriInfo methodUriInfo = getMethodUriInfo(uri, apiUri);
-
-						Field methodField = routeBuilder.getClass().getDeclaredField("controllerMethod");
-						methodField.setAccessible(true);
-						Method method = (Method) methodField.get(routeBuilder);
-
-						RouteMethod routeMethod = new RouteMethod(methodUriInfo.getMethodUri(), httpMethod, method);
-
-						if (resources.containsKey(controllerClass)) {
-							//TO-DO check if resource URI is the same
-							Resource resource = resources.get(controllerClass);
-							resource.addRouteMethod(routeMethod);
-						} else {
-							Resource resource = new Resource(controllerClass, methodUriInfo.getResourceUri());
-							resource.addRouteMethod(routeMethod);
-							resources.put(controllerClass, resource);
-						}
+					if (resources.containsKey(resourceClass)) {
+						//TO-DO check if resource URI is the same
+						Resource resource = resources.get(resourceClass);
+						resource.addRouteMethod(routeMethod);
+					} else {
+						Resource resource = new Resource(resourceClass, methodUriInfo.getResourceUri());
+						resource.addRouteMethod(routeMethod);
+						resources.put(resourceClass, resource);
 					}
 				}
 			}
-		} catch (Exception e) {
-			throw new RuntimeException(e);
 		}
 		return resources;
+	}
+
+	private Method getOperationMethod(RouteBuilder routeBuilder) {
+		ClassMember<Method> controllerMethodFiled = new ClassMember<>(routeBuilder, "controllerMethod");
+		return controllerMethodFiled.getValue();
+	}
+
+	private MethodUriInfo getMethodUriInfoFrom(RouteBuilder routeBuilder) {
+		ClassMember<String> uriField = new ClassMember<>(routeBuilder, "uri");
+		String uri = uriField.getValue();
+		return getMethodUriInfo(uri, apiUri);
+	}
+
+	private String getHttpMethodName(RouteBuilder routeBuilder) {
+		ClassMember<String> httpMethodField = new ClassMember<>(routeBuilder, "httpMethod");
+		return httpMethodField.getValue();
+	}
+
+	private Class getResourceClass(RouteBuilder routeBuilder) {
+		ClassMember<Class> controllerField = new ClassMember<>(routeBuilder, "controller");
+		return controllerField.getValue();
+	}
+
+	private List<RouteBuilder> getRouteBuilders() {
+		RouterImpl router = getRouterInstance();
+		ClassMember<List<RouteBuilder>> routeBuilders = new ClassMember<>(router, "allRouteBuilders");
+		return routeBuilders.getValue();
+	}
+
+	private RouterImpl getRouterInstance() {
+		RouterImpl router;
+		try {
+			ApplicationRoutes applicationRoutes = (ApplicationRoutes) Class.forName(routesClass).newInstance();
+			router = new RouterImpl(null, null);
+			applicationRoutes.init(router);
+		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		return router;
 	}
 
 	public ApiSourceInfo getApiInfo() {
