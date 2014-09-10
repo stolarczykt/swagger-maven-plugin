@@ -25,7 +25,7 @@ public class ApiSource {
 	 * can be configured here, use ; as the delimiter if you have more than one location.
 	 */
 	@Parameter(required = true)
-	private String locations;
+	private String routesClass;
 
 	@Parameter(name = "apiInfo", required = false)
 	private ApiSourceInfo apiInfo;
@@ -76,7 +76,7 @@ public class ApiSource {
 		Map<Class<?>, Resource> resources = new HashMap<>();
 
 		try {
-			ApplicationRoutes applicationRoutes = (ApplicationRoutes) Class.forName(locations).newInstance();
+			ApplicationRoutes applicationRoutes = (ApplicationRoutes) Class.forName(routesClass).newInstance();
 			RouterImpl router = new RouterImpl(null, null);
 			applicationRoutes.init(router);
 
@@ -133,12 +133,12 @@ public class ApiSource {
 		this.apiInfo = apiInfo;
 	}
 
-	public String getLocations() {
-		return locations;
+	public String getRoutesClass() {
+		return routesClass;
 	}
 
-	public void setLocations(String locations) {
-		this.locations = locations;
+	public void setRoutesClass(String routesClass) {
+		this.routesClass = routesClass;
 	}
 
 	public String getOutputTemplate() {
