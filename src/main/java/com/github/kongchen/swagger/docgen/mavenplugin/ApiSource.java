@@ -71,12 +71,6 @@ public class ApiSource {
 	@Parameter
 	private String overridingModels;
 
-	/**
-	 * Information about swagger filter that will be used for prefiltering
-	 */
-	@Parameter
-	private String swaggerInternalFilter;
-
 	public Map<Class<?>, Resource> getValidClasses() throws GenerateException {
 
 		Map<Class<?>, Resource> resources = new HashMap<>();
@@ -217,14 +211,6 @@ public class ApiSource {
 
 	public void setOverridingModels(String overridingModels) {
 		this.overridingModels = overridingModels;
-	}
-
-	public String getSwaggerInternalFilter() {
-		return swaggerInternalFilter;
-	}
-
-	public void setSwaggerInternalFilter(String swaggerInternalFilter) {
-		this.swaggerInternalFilter = swaggerInternalFilter;
 	}
 
 	public String getApiUri() {
