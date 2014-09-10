@@ -130,15 +130,14 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 							List<Parameter> parametersJava = JavaConversions.asJavaList(parameters);
 							java.lang.reflect.Parameter[] methodParameters = routeMethod.getControllerMethod().getParameters();
 
-							//TO-DO fix it - create parameter manually because now is made 2 times
-							for(Parameter parameter : parametersJava){
-								for (java.lang.reflect.Parameter methodParameter : methodParameters) {
-									ParameterSpecification parameterSpecification = new ParameterSpecification(methodParameter, parameter);
+							for (int i = 0; i < methodParameters.length; i++) {
+								java.lang.reflect.Parameter methodParameter = methodParameters[i];
+								Parameter parameter = parametersJava.get(i);
+								ParameterSpecification parameterSpecification = new ParameterSpecification(methodParameter, parameter);
 
-									resultParameters.add(new Parameter(parameterSpecification.getParameterName(), parameter.description(), parameter.defaultValue(),
-											parameter.required(), parameter.allowMultiple(), parameter.dataType(),
-											parameter.allowableValues(), parameterSpecification.getParameterType(), parameter.paramAccess()));
-								}
+								resultParameters.add(new Parameter(parameterSpecification.getParameterName(), parameter.description(), parameter.defaultValue(),
+										parameter.required(), parameter.allowMultiple(), parameter.dataType(),
+										parameter.allowableValues(), parameterSpecification.getParameterType(), parameter.paramAccess()));
 							}
 
 							String httpMethod = routeMethod.getHttpMethod();
