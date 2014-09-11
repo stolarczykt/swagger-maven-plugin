@@ -12,10 +12,12 @@ import org.apache.maven.plugin.logging.Log;
 import scala.None;
 import scala.Option;
 import scala.collection.JavaConversions;
-import scala.collection.immutable.Map;
 import scala.collection.mutable.Buffer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -88,12 +90,6 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 		basePath = basePath + apiSource.getApiUri();
         JaxrsApiReader reader = new DefaultJaxrsApiReader();
 		ApiListing apiListing = reader.read(basePath, resource.getControllerClass(), swaggerConfig).get();
-		String apiVersion = swaggerConfig.getApiVersion();
-		String swaggerVersion = apiListing.swaggerVersion();
-		scala.collection.immutable.List<String> produces = apiListing.produces();
-		scala.collection.immutable.List<String> consumes = apiListing.consumes();
-		scala.collection.immutable.List<String> protocols = apiListing.protocols();
-		scala.collection.immutable.List<Authorization> authorizations = apiListing.authorizations();
 
 		List<ApiDescription> apiDescriptions = new ArrayList<>();
 		scala.collection.immutable.List<ApiDescription> apis = apiListing.apis();
@@ -139,17 +135,14 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 
 		apis = scala.collection.immutable.List.fromIterator(JavaConversions.asScalaIterator(apiDescriptions.iterator()));
 
-		Option<Map<String, Model>> models = apiListing.models();
-
-
-		Option<String> description = apiListing.description();
-		int position = apiListing.position();
-		ApiListing apiListing2 = new ApiListing(apiVersion, swaggerVersion, basePath + apiSource.getApiUri(), resource.getResourceUri(), produces, consumes,
-				protocols, authorizations, apis, models, description, position);
+		apiListing = new ApiListing(swaggerConfig.getApiVersion(), apiListing.swaggerVersion(),
+				basePath + apiSource.getApiUri(), resource.getResourceUri(), apiListing.produces(), apiListing.consumes(),
+				apiListing.protocols(), apiListing.authorizations(), apis, apiListing.models(), apiListing.description(),
+				apiListing.position());
 
 		if (None.canEqual(apiListing)) return null;
 
-		return apiListing2;
+		return apiListing;
 	}
 
 }
