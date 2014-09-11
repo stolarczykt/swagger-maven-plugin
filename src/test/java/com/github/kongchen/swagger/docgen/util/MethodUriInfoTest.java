@@ -30,9 +30,9 @@ public class MethodUriInfoTest {
 	public static Collection parameters() {
 		return Arrays.asList(new Object[][]{
 				{"", "", "/backend", "/backend"},
-				{"/tasks", "", "/backend/tasks", "/backend"},
-				{"/tasks", "/{id}", "/backend/tasks/{id}", "/backend"},
-				{"/tasks", "/{id}/sth", "/backend/tasks/{id}/sth", "/backend"}
+				{"/tasks", "/tasks", "/backend/tasks", "/backend"},
+				{"/tasks", "/tasks/{id}", "/backend/tasks/{id}", "/backend"},
+				{"/tasks", "/tasks/{id}/sth", "/backend/tasks/{id}/sth", "/backend"}
 		});
 	}
 

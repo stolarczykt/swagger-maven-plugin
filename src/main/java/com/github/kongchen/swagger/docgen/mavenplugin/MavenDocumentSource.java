@@ -99,24 +99,11 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 		scala.collection.immutable.List<ApiDescription> apis = apiListing.apis();
 		List<ApiDescription> apiDescriptionsJava = JavaConversions.asJavaList(apis);
 
-		List<RouteMethod> routeMethods = resource.getRouteMethods();
-		java.util.Map<String, List<RouteMethod>> routeMap = new HashMap<>();
-		for (RouteMethod routeMethod : routeMethods) {
-			String uri = resource.getResourceUri() + routeMethod.getUri();
-			if(routeMap.containsKey(uri)) {
-				routeMap.get(uri).add(routeMethod);
-			} else {
-				ArrayList<RouteMethod> value = new ArrayList<>();
-				value.add(routeMethod);
-				routeMap.put(uri, value);
-			}
-		}
-
 		for(ApiDescription apiDescription : apiDescriptionsJava) {
 			List<Operation> operationsJava = JavaConversions.asJavaList(apiDescription.operations());
-			for(String key : routeMap.keySet()) {
+			for(String key : resource.getOperationsUris()) {
 				List<Operation> operations = new ArrayList<>();
-				for(RouteMethod routeMethod : routeMap.get(key)) {
+				for(RouteMethod routeMethod : resource.getRouteMethodsFor(key)) {
 					for(Operation operation : operationsJava) {
 						if(routeMethod.getControllerMethod().getName().equals(operation.nickname())){
 

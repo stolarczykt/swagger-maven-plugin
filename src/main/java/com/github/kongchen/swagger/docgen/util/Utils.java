@@ -22,7 +22,7 @@ public class Utils {
 			String[] split = uri.replaceFirst("/", "").split("/");
 			resourceUri = (split.length > 1) ? ("/" + split[1]) : "";
 			if(uri.length() > apiUri.length()) {
-				methodUri = uri.substring(apiUri.length() + resourceUri.length());
+				methodUri = resourceUri + uri.substring(apiUri.length() + resourceUri.length());
 			}
 		}
 		return new MethodUriInfo(resourceUri, methodUri);
