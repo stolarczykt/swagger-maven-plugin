@@ -18,8 +18,6 @@ import scala.collection.JavaConversions;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,12 +29,6 @@ import java.util.List;
 public abstract class AbstractDocumentSource {
 
 	protected final LogAdapter LOG;
-
-	private final String outputPath;
-
-	private final String templatePath;
-
-	private final String mustacheFileRoot;
 
 	private final String swaggerPath;
 
@@ -56,13 +48,9 @@ public abstract class AbstractDocumentSource {
 
 	private String overridingModels;
 
-	public AbstractDocumentSource(LogAdapter logAdapter, String outputPath,
-	                              String outputTpl, String swaggerOutput, String mustacheFileRoot,
+	public AbstractDocumentSource(LogAdapter logAdapter, String swaggerOutput,
 	                              boolean useOutputFlatStructure1, String overridingModels) {
 		LOG = logAdapter;
-		this.outputPath = outputPath;
-		this.templatePath = outputTpl;
-		this.mustacheFileRoot = mustacheFileRoot;
 		this.useOutputFlatStructure = useOutputFlatStructure1;
 		this.swaggerPath = swaggerOutput;
 		this.overridingModels = overridingModels;
@@ -283,35 +271,5 @@ public abstract class AbstractDocumentSource {
 		LOG.info("Creating file " + serviceFile.getAbsolutePath());
 		return serviceFile;
 	}
-
-
-	private URI getTemplateUri() throws GenerateException {
-		URI uri;
-		try {
-			uri = new URI(templatePath);
-		} catch (URISyntaxException e) {
-			File file = new File(templatePath);
-			if (!file.exists()) {
-				throw new GenerateException(
-						"Template "
-								+ file.getAbsoluteFile()
-								+ " not found. You can go to https://github.com/kongchen/api-doc-template to get templates.");
-			}
-			uri = file.toURI();
-		}
-		if (!uri.isAbsolute()) {
-			File file = new File(templatePath);
-			if (!file.exists()) {
-				throw new GenerateException(
-						"Template "
-								+ file.getAbsoluteFile()
-								+ " not found. You can go to https://github.com/kongchen/api-doc-template to get templates.");
-			} else {
-				uri = new File(templatePath).toURI();
-			}
-		}
-		return uri;
-	}
-
 
 }

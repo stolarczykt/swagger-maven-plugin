@@ -32,8 +32,7 @@ public class MavenDocumentSource extends AbstractDocumentSource {
 	private final NinjaToSwaggerModelMapper modelMapper;
 
 	public MavenDocumentSource(ApiSource apiSource, Log log) {
-		super(new LogAdapter(log),
-				apiSource.getOutputPath(), apiSource.getOutputTemplate(), apiSource.getSwaggerDirectory(), apiSource.mustacheFileRoot, apiSource.isUseOutputFlatStructure(), apiSource.getOverridingModels());
+		super(new LogAdapter(log), apiSource.getSwaggerDirectory(), apiSource.isUseOutputFlatStructure(), apiSource.getOverridingModels());
 
 		setApiVersion(apiSource.getApiVersion());
 		setBasePath(apiSource.getHostUrl() + apiSource.getApiUri());

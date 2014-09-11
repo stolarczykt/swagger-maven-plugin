@@ -10,7 +10,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
-import java.io.File;
 import java.util.List;
 
 /**
@@ -53,15 +52,6 @@ public class ApiDocumentMojo extends AbstractMojo {
 				AbstractDocumentSource documentSource = new MavenDocumentSource(apiSource, getLog());
 				documentSource.loadOverridingModels();
 				documentSource.loadDocuments();
-				if (apiSource.getOutputPath() != null) {
-					File outputDirectory = new File(apiSource.getOutputPath()).getParentFile();
-					if (outputDirectory != null && !outputDirectory.exists()) {
-						if (!outputDirectory.mkdirs()) {
-							throw new MojoExecutionException("Create directory[" +
-									apiSource.getOutputPath() + "] for output failed.");
-						}
-					}
-				}
 				documentSource.toSwaggerDocuments(
 						apiSource.getSwaggerUIDocBasePath() == null
 								? apiSource.getHostUrl()

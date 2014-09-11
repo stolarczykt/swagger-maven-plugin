@@ -50,22 +50,8 @@ public class ApiSource {
 	@Parameter(required = true)
 	private String apiUri;
 
-	/**
-	 * <code>outputTemplate</code> is the path of a mustache template file,
-	 * see more details in next section.
-	 * If you don't want to generate extra api documents, just don't set it.
-	 */
-	@Parameter(required = false)
-	private String outputTemplate;
-
-	@Parameter
-	private String outputPath;
-
 	@Parameter
 	private String swaggerDirectory;
-
-	@Parameter
-	public String mustacheFileRoot;
 
 	@Parameter
 	public boolean useOutputFlatStructure = true;
@@ -154,36 +140,12 @@ public class ApiSource {
 		this.routesClass = routesClass;
 	}
 
-	public String getOutputTemplate() {
-		return outputTemplate;
-	}
-
-	public void setOutputTemplate(String outputTemplate) {
-		this.outputTemplate = outputTemplate;
-	}
-
-	public String getMustacheFileRoot() {
-		return mustacheFileRoot;
-	}
-
-	public void setMustacheFileRoot(String mustacheFileRoot) {
-		this.mustacheFileRoot = mustacheFileRoot;
-	}
-
 	public boolean isUseOutputFlatStructure() {
 		return useOutputFlatStructure;
 	}
 
 	public void setUseOutputFlatStructure(boolean useOutputFlatStructure) {
 		this.useOutputFlatStructure = useOutputFlatStructure;
-	}
-
-	public String getOutputPath() {
-		return outputPath;
-	}
-
-	public void setOutputPath(String outputPath) {
-		this.outputPath = outputPath;
 	}
 
 	public String getApiVersion() {
