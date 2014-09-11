@@ -1,6 +1,10 @@
 package com.github.kongchen.swagger.docgen.mavenplugin;
 
 import com.github.kongchen.swagger.docgen.GenerateException;
+import com.github.kongchen.swagger.docgen.ninjamodel.MethodUriInfo;
+import com.github.kongchen.swagger.docgen.ninjamodel.Resource;
+import com.github.kongchen.swagger.docgen.ninjamodel.RouteMethod;
+import com.github.kongchen.swagger.docgen.ninjamodel.RouteMethodFactory;
 import com.github.kongchen.swagger.docgen.reflection.ClassMember;
 import com.wordnik.swagger.annotations.Api;
 import ninja.RouteBuilder;

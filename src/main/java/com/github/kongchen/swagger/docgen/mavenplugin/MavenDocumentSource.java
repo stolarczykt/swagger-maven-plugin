@@ -3,6 +3,8 @@ package com.github.kongchen.swagger.docgen.mavenplugin;
 import com.github.kongchen.swagger.docgen.AbstractDocumentSource;
 import com.github.kongchen.swagger.docgen.GenerateException;
 import com.github.kongchen.swagger.docgen.LogAdapter;
+import com.github.kongchen.swagger.docgen.ninjamodel.NinjaToSwaggerModelMapper;
+import com.github.kongchen.swagger.docgen.ninjamodel.Resource;
 import com.wordnik.swagger.config.SwaggerConfig;
 import com.wordnik.swagger.core.SwaggerSpec;
 import com.wordnik.swagger.jaxrs.JaxrsApiReader;

@@ -1,6 +1,6 @@
 package com.github.kongchen.swagger.docgen.util;
 
-import com.github.kongchen.swagger.docgen.mavenplugin.MethodUriInfo;
+import com.github.kongchen.swagger.docgen.ninjamodel.MethodUriInfo;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;

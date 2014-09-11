@@ -1,4 +1,4 @@
-package com.github.kongchen.swagger.docgen.mavenplugin;
+package com.github.kongchen.swagger.docgen.ninjamodel;
 
 import java.util.*;
 

@@ -1,6 +1,6 @@
 package com.github.kongchen.swagger.docgen.util;
 
-import com.github.kongchen.swagger.docgen.mavenplugin.MethodUriInfo;
+import com.github.kongchen.swagger.docgen.ninjamodel.MethodUriInfo;
 import com.wordnik.swagger.model.AllowableListValues;
 import com.wordnik.swagger.model.AllowableRangeValues;
 import com.wordnik.swagger.model.AllowableValues;
