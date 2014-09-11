@@ -50,13 +50,13 @@ public class ApiSource {
 	@Parameter(required = true)
 	private String apiUri;
 
-	@Parameter
+	@Parameter(required = true)
 	private String swaggerDirectory;
 
 	@Parameter
 	public boolean useOutputFlatStructure = true;
 
-	@Parameter
+	@Parameter(required = true)
 	private String swaggerUIDocBasePath;
 
 	@Parameter
