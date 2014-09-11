@@ -42,10 +42,10 @@ public class ApiSource {
 	private String apiVersion;
 
 	/**
-	 * The basePath of your APIs.
+	 * The hostUrl of your APIs.
 	 */
 	@Parameter(required = true)
-	private String basePath;
+	private String hostUrl;
 
 	@Parameter(required = true)
 	private String apiUri;
@@ -194,12 +194,12 @@ public class ApiSource {
 		this.apiVersion = apiVersion;
 	}
 
-	public String getBasePath() {
-		return basePath;
+	public String getHostUrl() {
+		return hostUrl;
 	}
 
-	public void setBasePath(String basePath) {
-		this.basePath = basePath;
+	public void setHostUrl(String hostUrl) {
+		this.hostUrl = hostUrl;
 	}
 
 	public String getSwaggerDirectory() {
