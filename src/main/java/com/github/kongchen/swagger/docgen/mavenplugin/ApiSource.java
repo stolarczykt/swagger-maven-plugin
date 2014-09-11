@@ -8,7 +8,6 @@ import ninja.RouterImpl;
 import ninja.application.ApplicationRoutes;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,16 +81,14 @@ public class ApiSource {
 
 	private Map<Class<?>, Resource> buildResourcesFrom(List<RouteBuilder> routeBuilders) {
 		Map<Class<?>, Resource> resources = new HashMap<>();
+		RouteMethodFactory routeMethodFactory = new RouteMethodFactory();
 		for (RouteBuilder routeBuilder : routeBuilders) {
 			Class resourceClass = getResourceClass(routeBuilder);
 			if (resourceClass != null) {
 				if (resourceClass.isAnnotationPresent(Api.class)) {
 
-					String httpMethodName = getHttpMethodName(routeBuilder);
 					MethodUriInfo methodUriInfo = getMethodUriInfoFrom(routeBuilder);
-					Method method = getOperationMethod(routeBuilder);
-
-					RouteMethod routeMethod = new RouteMethod(methodUriInfo.getMethodUri(), httpMethodName, method);
+					RouteMethod routeMethod = routeMethodFactory.createFrom(routeBuilder, methodUriInfo.getMethodUri());
 
 					if (resources.containsKey(resourceClass)) {
 						//TO-DO check if resource URI is the same
@@ -108,20 +105,10 @@ public class ApiSource {
 		return resources;
 	}
 
-	private Method getOperationMethod(RouteBuilder routeBuilder) {
-		ClassMember<Method> controllerMethodFiled = new ClassMember<>(routeBuilder, "controllerMethod");
-		return controllerMethodFiled.getValue();
-	}
-
 	private MethodUriInfo getMethodUriInfoFrom(RouteBuilder routeBuilder) {
 		ClassMember<String> uriField = new ClassMember<>(routeBuilder, "uri");
 		String uri = uriField.getValue();
 		return getMethodUriInfo(uri, apiUri);
-	}
-
-	private String getHttpMethodName(RouteBuilder routeBuilder) {
-		ClassMember<String> httpMethodField = new ClassMember<>(routeBuilder, "httpMethod");
-		return httpMethodField.getValue();
 	}
 
 	private Class getResourceClass(RouteBuilder routeBuilder) {
